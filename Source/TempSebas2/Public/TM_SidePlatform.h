@@ -31,6 +31,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Platform")
 		float MaxDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Platform")
+		float waitTime;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -41,7 +44,11 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Movable")
-	void Move();
+	void Move(float DeltaTime);
+
+	bool isMaxDistance;
+	//bool isMinHeight;
+	float currentTime;
 
 public:	
 	// Called every frame

@@ -22,7 +22,9 @@ ATM_SidePlatform::ATM_SidePlatform()
 	Speed = 10.0f;
 	MinDistance = 0.0f;
 	MaxDistance = 50.0f;
-
+	waitTime = 2.0f;
+	currentTime = 0.0f;
+	isMaxDistance = false;
 }
 
 // Called when the game starts or when spawned
@@ -36,13 +38,28 @@ void ATM_SidePlatform::BeginPlay()
 void ATM_SidePlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	Move();
+
+
+	Move(DeltaTime);
+
 
 }
 
-void ATM_SidePlatform::Move()
+void ATM_SidePlatform::Move(float DeltaTime)
 {
 	FVector forwardDirection = UKismetMathLibrary::GetForwardVector(GetActorRotation());
+
+	if (currentTime >= waitTime)
+	{
+		isMaxDistance = false;
+		currentTime = 0.0f;
+		return;
+	}
+
+	if (isMaxDistance) {
+		currentTime += DeltaTime;
+		return;
+	}
 
 	if (bIsGoingForward) {
 		forwardDirection = forwardDirection;
@@ -57,6 +74,7 @@ void ATM_SidePlatform::Move()
 
 	if (bIsGoingForward && GetActorLocation().X >= MaxDistance || !bIsGoingForward && GetActorLocation().X <= MinDistance) {
 		bIsGoingForward = !bIsGoingForward;
+		isMaxDistance = true;
 	}
 }
 
