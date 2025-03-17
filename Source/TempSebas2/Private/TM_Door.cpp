@@ -3,6 +3,7 @@
 
 #include "TM_Door.h"
 #include "Components\StaticMeshComponent.h"
+#include "Componets/BoxComponent.h"
 
 // Sets default values
 ATM_Door::ATM_Door()
@@ -18,6 +19,9 @@ ATM_Door::ATM_Door()
 
 	DoorComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Door"));
 	DoorComponent-> SetupAttachment(CustomRootComponent);
+
+	KeyZoneColliderComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("KeyZoneCollider"));
+	KeyZoneColliderComponent->SetupAttachment(CustomRootComponent);
 
 	OpenAngle = -90.0f;
 

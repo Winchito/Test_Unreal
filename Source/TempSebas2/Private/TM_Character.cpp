@@ -2,6 +2,7 @@
 
 
 #include "TM_Character.h"
+#include "Gameframework/SpringArmComponent.h"
 #include "Camera\CameraComponent.h"
 
 // Sets default values
@@ -10,11 +11,20 @@ ATM_Character::ATM_Character()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	bUseFirstPersonView = true;
 	FPSCameraSocketName = "SCK_Camera";
 
 	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FPS_CameraComponent"));
 	FPSCameraComponent-> bUsePawnControlRotation = true;
 	FPSCameraComponent-> SetupAttachment(GetMesh(), FPSCameraSocketName);
+
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
+	SpringArmComponent->bUsePawnControlRotation = true;
+	SpringArmComponent-> SetupAttachment(RootComponent);
+
+	TPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TPS_CameraComponent"));
+	TPSCameraComponent-> SetupAttachment(SpringArmComponent);
+
 
 }
 
@@ -49,6 +59,15 @@ void ATM_Character::AddControllerPitchInput(float value)
 {
 	//bIsLookInversion ? Super::AddControllerPitchInput(-value) : Super::AddControllerPitchInput(value);
 	Super::AddControllerPitchInput(bIsLookInversion ? -value : value);
+}
+
+void ATM_Character::AddKey(FName NewKey)
+{
+	DoorKeys.Add(NewKey);
+}
+
+bool ATM_Character::HasKey(FName KeyTag) {
+	return DoorKeys.Contains(KeyTag);
 }
 
 // Called every frame

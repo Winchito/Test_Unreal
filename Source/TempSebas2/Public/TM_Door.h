@@ -8,28 +8,38 @@
 
 class USceneComponent;
 class UStaticMeshComponent;
+class UBoxComponent;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_Door : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	ATM_Door();
 
+protected:
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly Category = "Components")
 	USceneComponent* CustomRootComponent;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* DoorFrameComponent;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* DoorComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UBoxComponent* KeyZoneColliderComponent;
+
+protected:
 
 	UPROPERTY(EditAnywhere, Category = "My door")
 	float OpenAngle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "My door")
+	float bisOpen;
+
+public:	
+	// Sets default values for this actor's properties
+	ATM_Door();
 
 protected:
 	// Called when the game starts or when spawned
