@@ -3,7 +3,8 @@
 
 #include "TM_Door.h"
 #include "Components\StaticMeshComponent.h"
-#include "Componets/BoxComponent.h"
+#include "Components/BoxComponent.h"
+#include "TM_Character.h"
 
 // Sets default values
 ATM_Door::ATM_Door()
@@ -22,8 +23,13 @@ ATM_Door::ATM_Door()
 
 	KeyZoneColliderComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("KeyZoneCollider"));
 	KeyZoneColliderComponent->SetupAttachment(CustomRootComponent);
+	KeyZoneColliderComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	KeyZoneColliderComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	KeyZoneColliderComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
 
 	OpenAngle = -90.0f;
+	DoorTag = "Key_A";
 
 
 }
@@ -32,8 +38,27 @@ ATM_Door::ATM_Door()
 void ATM_Door::BeginPlay()
 {
 	Super::BeginPlay();
-	OpenDoor();
+	KeyZoneColliderComponent->OnComponentBeginOverlap.AddDynamic(this, &ATM_Door::CheckKeyFromPlayer);
 	
+}
+
+void ATM_Door::CheckKeyFromPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (bisOpen) {
+		return;
+	}
+
+	if (IsValid(OtherActor)) 
+	{
+		ATM_Character* OverlappedCharacter = Cast<ATM_Character>(OtherActor);
+		if(IsValid(OverlappedCharacter))
+		{
+			if (OverlappedCharacter->HasKey(DoorTag))
+			{
+				OpenDoor();
+			}
+		}
+	}
 }
 
 // Called every frame
@@ -45,7 +70,11 @@ void ATM_Door::Tick(float DeltaTime)
 
 void ATM_Door::OpenDoor()
 {
-	FRotator NewRotation = FRotator(0.0f, OpenAngle, 0.0f);
-	DoorComponent->SetRelativeRotation(NewRotation);
+	//FRotator NewRotation = FRotator(0.0f, OpenAngle, 0.0f);
+	//DoorComponent->SetRelativeRotation(NewRotation)
+	bisOpen = true;
+	BP_OpenDoor();
+
+	
 }
 

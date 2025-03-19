@@ -17,7 +17,7 @@ class TEMPSEBAS2_API ATM_Door : public AActor
 
 protected:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* CustomRootComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -31,11 +31,14 @@ protected:
 
 protected:
 
-	UPROPERTY(EditAnywhere, Category = "My door")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "My door")
 	float OpenAngle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "My door")
 	float bisOpen;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "My door")
+	FName DoorTag;
 
 public:	
 	// Sets default values for this actor's properties
@@ -45,10 +48,18 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void CheckKeyFromPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "My door")
+	void BP_OpenDoor();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	void OpenDoor();
+
+	
 
 };
