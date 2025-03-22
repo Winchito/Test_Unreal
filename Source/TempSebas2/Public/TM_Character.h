@@ -8,6 +8,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class ATM_Weapon;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_Character : public ACharacter
@@ -40,6 +41,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Key")
 	TArray<FName> DoorKeys;
 
+	//Blueprint que existe en el Content Browser del creator
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<ATM_Weapon> InitialWeaponClass;
+
+	//Referencia de un objeto ya creado en la escena
+	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+	ATM_Weapon* CurrentWeapon;
+
 public:
 	// Sets default values for this character's properties
 	ATM_Character();
@@ -56,6 +65,11 @@ protected:
 
 	virtual void StopJumping() override;
 
+	virtual void StartWeaponAction();
+
+	virtual void StopWeaponAction();
+
+	virtual void CreateInitialWeapon();
 
 public:	
 	// Called every frame

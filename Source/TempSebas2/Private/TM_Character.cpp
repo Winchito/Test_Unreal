@@ -4,6 +4,7 @@
 #include "TM_Character.h"
 #include "Gameframework/SpringArmComponent.h"
 #include "Camera\CameraComponent.h"
+#include "Weapons/TM_Weapon.h"
 
 // Sets default values
 ATM_Character::ATM_Character()
@@ -33,6 +34,7 @@ void ATM_Character::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	CreateInitialWeapon();
 }
 
 void ATM_Character::MoveForward(float value)
@@ -53,6 +55,33 @@ void ATM_Character::Jump()
 void ATM_Character::StopJumping()
 {
 	Super::StopJumping();
+}
+
+void ATM_Character::StartWeaponAction()
+{
+	if (IsValid(CurrentWeapon)) {
+		CurrentWeapon->StartAction();
+	}
+
+}
+
+void ATM_Character::StopWeaponAction()
+{
+	if (IsValid(CurrentWeapon)) {
+		CurrentWeapon->StopAction();
+	}
+}
+
+void ATM_Character::CreateInitialWeapon()
+{
+	if (IsValid(InitialWeaponClass))
+	{
+		CurrentWeapon = GetWorld()->SpawnActor<ATM_Weapon>(InitialWeaponClass, GetActorLocation(), GetActorRotation());
+		if (IsValid(CurrentWeapon))
+		{
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
+	}
 }
 
 void ATM_Character::AddControllerPitchInput(float value)
@@ -92,6 +121,9 @@ void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATM_Character::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ATM_Character::StopJumping);
+
+	PlayerInputComponent->BindAction("WeaponAction", IE_Pressed, this, &ATM_Character::StartWeaponAction);
+	PlayerInputComponent->BindAction("WeaponAction", IE_Released, this, &ATM_Character::StopWeaponAction);
 }
 
 
