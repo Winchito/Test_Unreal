@@ -3,37 +3,50 @@
 
 #include "TM_Character.h"
 #include "Gameframework/SpringArmComponent.h"
-#include "Camera\CameraComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Weapons/TM_Weapon.h"
 
 // Sets default values
 ATM_Character::ATM_Character()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	bUseFirstPersonView = true;
 	FPSCameraSocketName = "SCK_Camera";
 
 	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FPS_CameraComponent"));
-	FPSCameraComponent-> bUsePawnControlRotation = true;
-	FPSCameraComponent-> SetupAttachment(GetMesh(), FPSCameraSocketName);
+	FPSCameraComponent->bUsePawnControlRotation = true;
+	FPSCameraComponent->SetupAttachment(GetMesh(), FPSCameraSocketName);
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->bUsePawnControlRotation = true;
-	SpringArmComponent-> SetupAttachment(RootComponent);
+	SpringArmComponent->SetupAttachment(RootComponent);
 
 	TPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TPS_CameraComponent"));
-	TPSCameraComponent-> SetupAttachment(SpringArmComponent);
+	TPSCameraComponent->SetupAttachment(SpringArmComponent);
 
 
+}
+
+FVector ATM_Character::GetPawnViewLocation() const
+{
+	if (IsValid(FPSCameraComponent) && bUseFirstPersonView) {
+		return FPSCameraComponent->GetComponentLocation();
+	}
+
+	if (IsValid(TPSCameraComponent) && !bUseFirstPersonView) {
+		return TPSCameraComponent->GetComponentLocation();
+	}
+
+	return Super::GetPawnViewLocation();
 }
 
 // Called when the game starts or when spawned
 void ATM_Character::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	CreateInitialWeapon();
 }
 
@@ -79,6 +92,7 @@ void ATM_Character::CreateInitialWeapon()
 		CurrentWeapon = GetWorld()->SpawnActor<ATM_Weapon>(InitialWeaponClass, GetActorLocation(), GetActorRotation());
 		if (IsValid(CurrentWeapon))
 		{
+			CurrentWeapon->SetCharacterOwner(this);
 			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 	}

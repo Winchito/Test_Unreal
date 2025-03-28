@@ -6,14 +6,26 @@
 #include "GameFramework/Actor.h"
 #include "TM_Weapon.generated.h"
 
+class UDamageType;
+class ACharacter;
+
 UCLASS()
 class TEMPSEBAS2_API ATM_Weapon : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ATM_Weapon();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+		float Damage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+		TSubclassOf<UDamageType> DamageType;
+
+	ACharacter* CurrentOwnerCharacter;
 
 protected:
 	// Called when the game starts or when spawned
@@ -34,5 +46,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		virtual void StopAction();
+
+	UFUNCTION(BlueprintCallable)
+		void SetCharacterOwner(ACharacter* NewOwner);
 
 };
