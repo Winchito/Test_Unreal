@@ -5,6 +5,10 @@
 #include "Gameframework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Weapons/TM_Weapon.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
+
 
 // Sets default values
 ATM_Character::ATM_Character()
@@ -46,8 +50,16 @@ FVector ATM_Character::GetPawnViewLocation() const
 void ATM_Character::BeginPlay()
 {
 	Super::BeginPlay();
-
+	InitializeReferences();
 	CreateInitialWeapon();
+}
+
+void ATM_Character::InitializeReferences()
+{
+	if (IsValid(GetMesh())) 
+	{
+		MyAnimInstance = GetMesh()->GetAnimInstance();
+	}
 }
 
 void ATM_Character::MoveForward(float value)
@@ -98,6 +110,20 @@ void ATM_Character::CreateInitialWeapon()
 	}
 }
 
+void ATM_Character::StartMelee()
+{
+	//UE_LOG(LogTemp, Warning, TEXT("Player starts melee action"));
+	if (IsValid(MyAnimInstance)&& IsValid(MeleeMontage)) 
+	{
+		MyAnimInstance->Montage_Play(MeleeMontage);
+	}
+}
+
+void ATM_Character::StopMelee()
+{
+	//UE_LOG(LogTemp, Warning, TEXT("Player stops melee action"));
+}
+
 void ATM_Character::AddControllerPitchInput(float value)
 {
 	//bIsLookInversion ? Super::AddControllerPitchInput(-value) : Super::AddControllerPitchInput(value);
@@ -138,6 +164,9 @@ void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("WeaponAction", IE_Pressed, this, &ATM_Character::StartWeaponAction);
 	PlayerInputComponent->BindAction("WeaponAction", IE_Released, this, &ATM_Character::StopWeaponAction);
+
+	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &ATM_Character::StartMelee);
+	PlayerInputComponent->BindAction("Melee", IE_Released, this, &ATM_Character::StopMelee);
 }
 
 

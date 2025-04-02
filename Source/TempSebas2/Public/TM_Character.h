@@ -9,6 +9,8 @@
 class USpringArmComponent;
 class UCameraComponent;
 class ATM_Weapon;
+class UAnimMontage;
+class UAnimInstance;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_Character : public ACharacter
@@ -49,6 +51,11 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	ATM_Weapon* CurrentWeapon;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* MeleeMontage;
+
+	UAnimInstance* MyAnimInstance;
+
 public:
 	// Sets default values for this character's properties
 	ATM_Character();
@@ -58,6 +65,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	void InitializeReferences();
 
 	void MoveForward(float value);
 
@@ -72,6 +81,10 @@ protected:
 	virtual void StopWeaponAction();
 
 	virtual void CreateInitialWeapon();
+
+	void StartMelee();
+
+	void StopMelee();
 
 public:	
 	// Called every frame
