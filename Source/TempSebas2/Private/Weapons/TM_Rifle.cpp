@@ -2,6 +2,7 @@
 
 
 #include "TM_Rifle.h"
+#include "TempSebas2.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
@@ -40,7 +41,7 @@ void ATM_Rifle::StartAction()
 		FVector TraceEndPoint = TraceEnd;
 
 		FHitResult HitResult;
-		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd, ECC_Visibility, QueryParams);
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
 
 		if (bHit)
 		{

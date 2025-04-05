@@ -2,12 +2,14 @@
 
 
 #include "TM_Character.h"
+#include "TempSebas2.h"
 #include "Gameframework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Weapons/TM_Weapon.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/CapsuleComponent.h"
 
 
 // Sets default values
@@ -18,6 +20,7 @@ ATM_Character::ATM_Character()
 
 	bUseFirstPersonView = true;
 	FPSCameraSocketName = "SCK_Camera";
+	MeleeSocketName = "SCK_Melee";
 
 	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FPS_CameraComponent"));
 	FPSCameraComponent->bUsePawnControlRotation = true;
@@ -29,6 +32,11 @@ ATM_Character::ATM_Character()
 
 	TPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TPS_CameraComponent"));
 	TPSCameraComponent->SetupAttachment(SpringArmComponent);
+
+	MeleeDetectorComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("MeleeDetectorComponent"));
+	MeleeDetectorComponent->SetupAttachment(GetMesh(), MeleeSocketName);
+	MeleeDetectorComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	MeleeDetectorComponent->SetCollisionResponseToChannel(COLLISION_ENEMY, ECR_Overlap);
 
 
 }
