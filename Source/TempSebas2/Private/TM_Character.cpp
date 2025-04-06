@@ -10,6 +10,7 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -21,6 +22,9 @@ ATM_Character::ATM_Character()
 	bUseFirstPersonView = true;
 	FPSCameraSocketName = "SCK_Camera";
 	MeleeSocketName = "SCK_Melee";
+	MeleeDamage = 25.0f;
+	bIsDoingMelee = false;
+	bCanUseWeapon = true;
 
 	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FPS_CameraComponent"));
 	FPSCameraComponent->bUsePawnControlRotation = true;
@@ -37,8 +41,8 @@ ATM_Character::ATM_Character()
 	MeleeDetectorComponent->SetupAttachment(GetMesh(), MeleeSocketName);
 	MeleeDetectorComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeDetectorComponent->SetCollisionResponseToChannel(COLLISION_ENEMY, ECR_Overlap);
-
-
+	MeleeDetectorComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 }
 
 FVector ATM_Character::GetPawnViewLocation() const
@@ -60,6 +64,7 @@ void ATM_Character::BeginPlay()
 	Super::BeginPlay();
 	InitializeReferences();
 	CreateInitialWeapon();
+	MeleeDetectorComponent->OnComponentBeginOverlap.AddDynamic(this, &ATM_Character::MakeMeleeDamage);
 }
 
 void ATM_Character::InitializeReferences()
@@ -92,6 +97,10 @@ void ATM_Character::StopJumping()
 
 void ATM_Character::StartWeaponAction()
 {
+	if (!bCanUseWeapon)
+	{
+		return;
+	}
 	if (IsValid(CurrentWeapon)) {
 		CurrentWeapon->StartAction();
 	}
@@ -100,6 +109,11 @@ void ATM_Character::StartWeaponAction()
 
 void ATM_Character::StopWeaponAction()
 {
+	if (!bCanUseWeapon)
+	{
+		return;
+	}
+
 	if (IsValid(CurrentWeapon)) {
 		CurrentWeapon->StopAction();
 	}
@@ -121,15 +135,32 @@ void ATM_Character::CreateInitialWeapon()
 void ATM_Character::StartMelee()
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Player starts melee action"));
-	if (IsValid(MyAnimInstance)&& IsValid(MeleeMontage)) 
+
+	if (bIsDoingMelee)
+	{
+		return;
+	}
+
+	if (IsValid(MyAnimInstance) && IsValid(MeleeMontage))
 	{
 		MyAnimInstance->Montage_Play(MeleeMontage);
 	}
+
+	SetActionsState(true);
+
 }
 
 void ATM_Character::StopMelee()
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Player stops melee action"));
+}
+
+void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (IsValid(OtherActor))
+	{
+		UGameplayStatics::ApplyPointDamage(OtherActor, MeleeDamage, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
+	}
 }
 
 void ATM_Character::AddControllerPitchInput(float value)
@@ -145,6 +176,17 @@ void ATM_Character::AddKey(FName NewKey)
 
 bool ATM_Character::HasKey(FName KeyTag) {
 	return DoorKeys.Contains(KeyTag);
+}
+
+void ATM_Character::SetMeleeDetectorCollision(ECollisionEnabled::Type NewCollisionState)
+{
+	MeleeDetectorComponent->SetCollisionEnabled(NewCollisionState);
+}
+
+void ATM_Character::SetActionsState(bool NewState)
+{
+	bIsDoingMelee = NewState;
+	bCanUseWeapon = !NewState;
 }
 
 // Called every frame
