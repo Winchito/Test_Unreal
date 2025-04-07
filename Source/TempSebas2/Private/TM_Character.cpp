@@ -25,6 +25,8 @@ ATM_Character::ATM_Character()
 	MeleeDamage = 25.0f;
 	bIsDoingMelee = false;
 	bCanUseWeapon = true;
+	MaxComboMultiplier = 4.0f;
+	CurrentComboMultiplier = 1.0f;
 
 	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FPS_CameraComponent"));
 	FPSCameraComponent->bUsePawnControlRotation = true;
@@ -136,9 +138,29 @@ void ATM_Character::StartMelee()
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Player starts melee action"));
 
-	if (bIsDoingMelee)
+	if (bIsDoingMelee && !bCanMakeCombos)
 	{
 		return;
+	}
+
+	if (bCanMakeCombos)
+	{
+		if (bIsDoingMelee)
+		{
+			if (bIsComboEnable)
+			{
+				if (CurrentComboMultiplier < MaxComboMultiplier)
+				{
+					CurrentComboMultiplier++;
+					SetComboEnable(false);
+				}
+			}
+			else
+			{
+				return;
+			}
+		}
+
 	}
 
 	if (IsValid(MyAnimInstance) && IsValid(MeleeMontage))
@@ -159,7 +181,7 @@ void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AA
 {
 	if (IsValid(OtherActor))
 	{
-		UGameplayStatics::ApplyPointDamage(OtherActor, MeleeDamage, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
+		UGameplayStatics::ApplyPointDamage(OtherActor, MeleeDamage * CurrentComboMultiplier, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
 	}
 }
 
@@ -187,6 +209,17 @@ void ATM_Character::SetActionsState(bool NewState)
 {
 	bIsDoingMelee = NewState;
 	bCanUseWeapon = !NewState;
+}
+
+void ATM_Character::SetComboEnable(bool NewState)
+{
+	bIsComboEnable = NewState;
+}
+
+void ATM_Character::ResetCombo()
+{
+	SetComboEnable(false);
+	CurrentComboMultiplier = 1.0f;
 }
 
 // Called every frame
