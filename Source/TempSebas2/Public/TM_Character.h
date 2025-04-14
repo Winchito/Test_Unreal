@@ -11,6 +11,8 @@ class UCameraComponent;
 class ATM_Weapon;
 class UAnimMontage;
 class UAnimInstance;
+class UTM_HealthComponent;
+class ATM_GameMode;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_Character : public ACharacter
@@ -32,6 +34,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components")
 	UCapsuleComponent* MeleeDetectorComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UTM_HealthComponent* HealthComponent;
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
@@ -51,6 +56,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Melee")
 	bool bIsComboEnable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game Over")
+	bool bHasToDestroy;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Melee")
 	float MeleeDamage;
@@ -82,6 +90,8 @@ protected:
 	UAnimMontage* MeleeMontage;
 
 	UAnimInstance* MyAnimInstance;
+
+	ATM_GameMode* GameModeReference;
 
 public:
 	// Sets default values for this character's properties
@@ -116,6 +126,9 @@ protected:
 	UFUNCTION()
 	void MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION()
+	void OnHealthChange(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -138,5 +151,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ResetCombo();
+
+	bool HasToDestroy() { return bHasToDestroy; };
 
 };

@@ -11,6 +11,8 @@
 #include "Animation/AnimMontage.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/TM_HealthComponent.h"
+#include "Core/TM_GameMode.h"
 
 
 // Sets default values
@@ -44,6 +46,8 @@ ATM_Character::ATM_Character()
 	MeleeDetectorComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeDetectorComponent->SetCollisionResponseToChannel(COLLISION_ENEMY, ECR_Overlap);
 	MeleeDetectorComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	HealthComponent = CreateDefaultSubobject<UTM_HealthComponent>(TEXT("HealthComponent"));
 	
 }
 
@@ -67,6 +71,8 @@ void ATM_Character::BeginPlay()
 	InitializeReferences();
 	CreateInitialWeapon();
 	MeleeDetectorComponent->OnComponentBeginOverlap.AddDynamic(this, &ATM_Character::MakeMeleeDamage);
+
+	HealthComponent->OnHealthChangeDelegate.AddDynamic(this, &ATM_Character::OnHealthChange);
 }
 
 void ATM_Character::InitializeReferences()
@@ -75,6 +81,8 @@ void ATM_Character::InitializeReferences()
 	{
 		MyAnimInstance = GetMesh()->GetAnimInstance();
 	}
+
+	GameModeReference = Cast<ATM_GameMode>(GetWorld()->GetAuthGameMode());
 }
 
 void ATM_Character::MoveForward(float value)
@@ -182,6 +190,17 @@ void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AA
 	if (IsValid(OtherActor))
 	{
 		UGameplayStatics::ApplyPointDamage(OtherActor, MeleeDamage * CurrentComboMultiplier, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
+	}
+}
+
+void ATM_Character::OnHealthChange(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (HealthComponent->IsDead())
+	{
+		if (IsValid(GameModeReference))
+		{
+			GameModeReference->GameOver(this);
+		}
 	}
 }
 
