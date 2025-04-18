@@ -24,6 +24,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Key")
 	FName KeyTag;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Key")
+	float XPValue;
+
 public:
 
 	// Sets default values for this actor's properties

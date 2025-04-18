@@ -14,6 +14,7 @@ ATM_DoorKey::ATM_DoorKey()
 	KeyMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	KeyTag = "Key_A";
+	XPValue = 40.f;
 
 }
 
@@ -22,5 +23,6 @@ void ATM_DoorKey::Pickup(ATM_Character* PickupCharacter)
 	Super::Pickup(PickupCharacter);
 
 	PickupCharacter->AddKey(KeyTag);
+	PickupCharacter->GainUltimateXP(XPValue);
 	Destroy();
 }

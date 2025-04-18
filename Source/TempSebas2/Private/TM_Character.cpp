@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/TM_HealthComponent.h"
 #include "Core/TM_GameMode.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 // Sets default values
@@ -48,6 +49,16 @@ ATM_Character::ATM_Character()
 	MeleeDetectorComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	HealthComponent = CreateDefaultSubobject<UTM_HealthComponent>(TEXT("HealthComponent"));
+
+	bUltimateWithTick = true;
+	MaxUltimateXP = 100.0f;
+	MaxUltimateDuration = 10.0f;
+	UltimateFrequency = 0.5f;
+
+	UltimateWalkSpeed = 2000.0f;
+	UltimatePlayRate = 2.0f;
+	PlayRate = 1.0f;
+	UltimateShotFrequency = 0.1f;
 	
 }
 
@@ -73,6 +84,8 @@ void ATM_Character::BeginPlay()
 	MeleeDetectorComponent->OnComponentBeginOverlap.AddDynamic(this, &ATM_Character::MakeMeleeDamage);
 
 	HealthComponent->OnHealthChangeDelegate.AddDynamic(this, &ATM_Character::OnHealthChange);
+
+	NormalWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 }
 
 void ATM_Character::InitializeReferences()
@@ -113,6 +126,11 @@ void ATM_Character::StartWeaponAction()
 	}
 	if (IsValid(CurrentWeapon)) {
 		CurrentWeapon->StartAction();
+
+		if (bIsUsingUltimate)
+		{
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_AutomaticShoot, CurrentWeapon, &ATM_Weapon::StartAction, UltimateShotFrequency, true);
+		}
 	}
 
 }
@@ -126,6 +144,11 @@ void ATM_Character::StopWeaponAction()
 
 	if (IsValid(CurrentWeapon)) {
 		CurrentWeapon->StopAction();
+
+		if (bIsUsingUltimate)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(TimerHandle_AutomaticShoot);
+		}
 	}
 }
 
@@ -173,7 +196,7 @@ void ATM_Character::StartMelee()
 
 	if (IsValid(MyAnimInstance) && IsValid(MeleeMontage))
 	{
-		MyAnimInstance->Montage_Play(MeleeMontage);
+		MyAnimInstance->Montage_Play(MeleeMontage, PlayRate);
 	}
 
 	SetActionsState(true);
@@ -183,6 +206,46 @@ void ATM_Character::StartMelee()
 void ATM_Character::StopMelee()
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Player stops melee action"));
+}
+
+void ATM_Character::StartUltimate()
+{
+
+	if (bCanUseUltimate && !bIsUsingUltimate)
+	{ 
+		CurrentUltimateDuration = MaxUltimateDuration;
+		bCanUseUltimate = false;
+
+		if (IsValid(MyAnimInstance) && IsValid(UltimateMontage))
+		{
+			//GetCharacterMovement()->MaxWalkSpeed = 0.0f;
+			const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateMontage);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginUltimateBehavior, StartUltimateMontageDuration, false);
+		}
+		else
+		{
+			BeginUltimateBehavior();
+		}
+
+		BP_StartUltimate();
+	}
+}
+
+void ATM_Character::BeginUltimateBehavior()
+{
+	bIsUsingUltimate = true;
+	GetCharacterMovement()->MaxWalkSpeed = UltimateWalkSpeed;
+	PlayRate = UltimatePlayRate;
+
+	if (!bUltimateWithTick)
+	{
+		GetWorld()->GetTimerManager().SetTimer(UltimateTimerHandle, this, &ATM_Character::UpdateUltimateDurationWithTimer, UltimateFrequency, true);
+	}
+}
+
+void ATM_Character::StopUltimate()
+{
+
 }
 
 void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -241,10 +304,60 @@ void ATM_Character::ResetCombo()
 	CurrentComboMultiplier = 1.0f;
 }
 
+void ATM_Character::GainUltimateXP(float XPGained)
+{
+	if (bCanUseUltimate || bIsUsingUltimate)
+	{
+		return;
+	}
+
+	CurrentUltimateXP = FMath::Clamp(CurrentUltimateXP + XPGained, 0.0f, MaxUltimateXP);
+
+	if (CurrentUltimateXP == MaxUltimateXP) 
+	{
+		bCanUseUltimate = true;
+		
+	}
+
+	BP_GainUltimateXP(XPGained);
+}
+
+void ATM_Character::UpdateUltimateDuration(float Value)
+{
+	CurrentUltimateDuration = FMath::Clamp(CurrentUltimateDuration - Value, 0.0f, MaxUltimateDuration);
+	BP_UpdateUltimateDuration(Value);
+
+	if (CurrentUltimateDuration == 0.0f)
+	{
+		bIsUsingUltimate = false;
+
+		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+		PlayRate = 1.0f;
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_AutomaticShoot);
+
+		if (!bUltimateWithTick)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(UltimateTimerHandle);
+		}
+		CurrentUltimateXP = 0.0f;
+		BP_StopUltimate();
+	}
+}
+
+void ATM_Character::UpdateUltimateDurationWithTimer()
+{
+	UpdateUltimateDuration(UltimateFrequency);
+}
+
 // Called every frame
 void ATM_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (bUltimateWithTick && bIsUsingUltimate)
+	{
+		UpdateUltimateDuration(DeltaTime);
+	}
 
 }
 
@@ -269,6 +382,9 @@ void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &ATM_Character::StartMelee);
 	PlayerInputComponent->BindAction("Melee", IE_Released, this, &ATM_Character::StopMelee);
+
+	PlayerInputComponent->BindAction("Ultimate", IE_Pressed, this, &ATM_Character::StartUltimate);
+	PlayerInputComponent->BindAction("Ultimate", IE_Released, this, &ATM_Character::StopUltimate);
 }
 
 
