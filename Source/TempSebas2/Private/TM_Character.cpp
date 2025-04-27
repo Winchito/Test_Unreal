@@ -252,13 +252,33 @@ void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AA
 {
 	if (IsValid(OtherActor))
 	{
-		UGameplayStatics::ApplyPointDamage(OtherActor, MeleeDamage * CurrentComboMultiplier, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
+		if (OtherActor == this) {
+			return;
+		}
+
+		ATM_Character* MeleeTarget = Cast<ATM_Character>(OtherActor);
+		if (IsValid(MeleeTarget))
+		{
+			bool bPlayerAttackingEnemy = GetCharacterType() == ETM_CharacterType::CharacterType_Player && MeleeTarget->GetCharacterType() == ETM_CharacterType::CharacterType_Enemy;
+			bool bEnemyAttackingPlayer = GetCharacterType() == ETM_CharacterType::CharacterType_Enemy && MeleeTarget->GetCharacterType() == ETM_CharacterType::CharacterType_Player;
+
+			if (bPlayerAttackingEnemy || bEnemyAttackingPlayer)
+			{
+				UGameplayStatics::ApplyPointDamage(OtherActor, MeleeDamage * CurrentComboMultiplier, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
+			}
+		}
+		else
+		{
+			UGameplayStatics::ApplyPointDamage(OtherActor, MeleeDamage * CurrentComboMultiplier, SweepResult.Location, SweepResult, GetInstigatorController(), this, nullptr);
+		}
+
+
 	}
 }
 
 void ATM_Character::OnHealthChange(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (HealthComponent->IsDead())
+	if (HealthComponent->IsDead() && GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 	{
 		if (IsValid(GameModeReference))
 		{

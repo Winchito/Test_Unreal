@@ -51,7 +51,7 @@ void ATM_Door::CheckKeyFromPlayer(UPrimitiveComponent* OverlappedComponent, AAct
 	if (IsValid(OtherActor)) 
 	{
 		ATM_Character* OverlappedCharacter = Cast<ATM_Character>(OtherActor);
-		if(IsValid(OverlappedCharacter))
+		if(IsValid(OverlappedCharacter) && OverlappedCharacter->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 		{
 			if (OverlappedCharacter->HasKey(DoorTag))
 			{

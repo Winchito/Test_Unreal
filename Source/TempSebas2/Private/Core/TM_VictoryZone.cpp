@@ -39,7 +39,7 @@ void ATM_VictoryZone::NotifyActorBeginOverlap(AActor* OtherActor)
 	if (IsValid(OtherActor) && IsValid(GameModeReference))
 	{
 		ATM_Character* TMCharacter = Cast<ATM_Character>(OtherActor);
-		if (IsValid(TMCharacter))
+		if (IsValid(TMCharacter) && TMCharacter-> GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 		{
 			GameModeReference->Victory(TMCharacter);
 		}

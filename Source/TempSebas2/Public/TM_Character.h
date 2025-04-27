@@ -14,6 +14,13 @@ class UAnimInstance;
 class UTM_HealthComponent;
 class ATM_GameMode;
 
+UENUM()
+enum class ETM_CharacterType : uint8
+{
+	CharacterType_Player		UMETA(DisplayName = "Player"),
+	CharacterType_Enemy			UMETA(DisplayName = "Enemy")
+};
+
 UCLASS()
 class TEMPSEBAS2_API ATM_Character : public ACharacter
 {
@@ -117,6 +124,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Key")
 	TArray<FName> DoorKeys;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	ETM_CharacterType CharacterType;
+
 	//Blueprint que existe en el Content Browser del creator
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<ATM_Weapon> InitialWeaponClass;
@@ -167,6 +177,7 @@ protected:
 
 	virtual void CreateInitialWeapon();
 
+	UFUNCTION(BlueprintCallable)
 	void StartMelee();
 
 	void StopMelee();
@@ -214,6 +225,9 @@ public:
 	void UpdateUltimateDurationWithTimer();
 
 	void BeginUltimateBehavior();
+
+	UFUNCTION(BlueprintCallable)
+	ETM_CharacterType GetCharacterType() { return CharacterType; };
 
 protected:
 

@@ -38,7 +38,7 @@ void ATM_Item::NotifyActorBeginOverlap(AActor* OtherActor)
 	{
 		ATM_Character* OverlappedCharacter = Cast<ATM_Character>(OtherActor);
 
-		if (IsValid(OverlappedCharacter))
+		if (IsValid(OverlappedCharacter) && OverlappedCharacter->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 		{
 			Pickup(OverlappedCharacter);
 		}
