@@ -73,6 +73,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game Over")
 	bool bHasToDestroy;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	bool bIsSprinting;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
 	bool bUltimateWithTick;
 
@@ -185,6 +188,10 @@ protected:
 	void StartUltimate();
 
 	void StopUltimate();
+
+	void StartSprinting();
+
+	void StopSprinting();
 
 	UFUNCTION()
 	void MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

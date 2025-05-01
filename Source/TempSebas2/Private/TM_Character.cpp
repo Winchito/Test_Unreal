@@ -124,6 +124,9 @@ void ATM_Character::StartWeaponAction()
 	{
 		return;
 	}
+	if (bIsSprinting) {
+		return;
+	}
 	if (IsValid(CurrentWeapon)) {
 		CurrentWeapon->StartAction();
 
@@ -246,6 +249,20 @@ void ATM_Character::BeginUltimateBehavior()
 void ATM_Character::StopUltimate()
 {
 
+}
+
+void ATM_Character::StartSprinting()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+
+	bIsSprinting = true;
+
+}
+
+void ATM_Character::StopSprinting()
+{
+	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+	bIsSprinting = false;
 }
 
 void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -405,6 +422,9 @@ void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("Ultimate", IE_Pressed, this, &ATM_Character::StartUltimate);
 	PlayerInputComponent->BindAction("Ultimate", IE_Released, this, &ATM_Character::StopUltimate);
+
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATM_Character::StartSprinting);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATM_Character::StopSprinting);
 }
 
 
