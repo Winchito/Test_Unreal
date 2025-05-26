@@ -76,6 +76,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	bool bIsSprinting;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	bool bCanSprint;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
 	bool bUltimateWithTick;
 

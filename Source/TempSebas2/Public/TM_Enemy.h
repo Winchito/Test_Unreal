@@ -31,7 +31,22 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|NavigationPath")
 	float WaitingTimeOnPathPoint;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Ultimate XP")
+	float XPValue;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|NavigationPath")
 	ATM_ActorRoutePaths* ActorPath;
+
+protected:
+
+	virtual void BeginPlay() override;
+
+protected:
+
+	UFUNCTION()
+	void GiveXP(AActor* DamageCauser);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_GiveXP(AActor* DamageCauser);
 	
 };

@@ -44,6 +44,7 @@ void UTM_HealthComponent::TakingDamage(AActor* DamagedActor, float Damage, const
 	if (Health == 0.0f)
 	{
 		bIsDead = true;
+		OnDeathDelegate.Broadcast(DamageCauser);
 	}
 
 	OnHealthChangeDelegate.Broadcast(this, DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);

@@ -9,13 +9,16 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangeSignature, UTM_HealthComponent*, HealthComponent, AActor*, DamagedActor, float, Damage, const class UDamageType*, DamageType, class AController*, InstigatedBy, AActor*, DamageCauser);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathSignature, AActor*, DamageCauser);
+
+
 UCLASS( ClassGroup=(ROOM), meta=(BlueprintSpawnableComponent) )
 class TEMPSEBAS2_API UTM_HealthComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 protected:
-
+	 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Debug")
 	bool bDebug;
 
@@ -35,6 +38,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChangeSignature OnHealthChangeDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnDeathSignature OnDeathDelegate;
 
 public:	
 	// Sets default values for this component's properties

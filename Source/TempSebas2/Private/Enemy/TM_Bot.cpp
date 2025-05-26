@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "TM_Character.h"
+#include "Weapons/TM_Rifle.h"
 #include "NavigationSystem/Public/NavigationSystem.h"
 #include "NavigationSystem/Public/NavigationPath.h"
 #include "DrawDebugHelpers.h"
@@ -39,6 +40,8 @@ ATM_Bot::ATM_Bot()
 	ExplosionDamage = 100.0f;
 	ExplosionRadius = 50.0f;
 
+	XPValue = 20.f;
+
 }
 
 // Called when the game starts or when spawned
@@ -54,6 +57,7 @@ void ATM_Bot::BeginPlay()
 	}
 
 	HealthComponent->OnHealthChangeDelegate.AddDynamic(this, &ATM_Bot::TakingDamage);
+	HealthComponent->OnDeathDelegate.AddDynamic(this, &ATM_Bot::GiveXP);
 	SelfDestructionDetectorComponent->OnComponentBeginOverlap.AddDynamic(this, &ATM_Bot::StartCountDown);
 
 	BotMaterial = BotMeshComponent->CreateAndSetMaterialInstanceDynamicFromMaterial(0, BotMeshComponent->GetMaterial(0));
@@ -168,4 +172,25 @@ void ATM_Bot::StartCountDown(UPrimitiveComponent* OverlappedComponent, AActor* O
 void ATM_Bot::SelfDamage()
 {
 	UGameplayStatics::ApplyDamage(this, 20.0f, GetInstigatorController(), nullptr, nullptr);
+}
+
+void ATM_Bot::GiveXP(AActor* DamageCauser)
+{
+	ATM_Character* PossiblePlayer = Cast<ATM_Character>(DamageCauser);
+	if (IsValid(PossiblePlayer) && PossiblePlayer->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+	{
+		PossiblePlayer->GainUltimateXP(XPValue);
+	}
+
+	ATM_Rifle* PossibleRifle = Cast<ATM_Rifle>(DamageCauser);
+	if (IsValid(PossibleRifle))
+	{
+		ATM_Character* RifleOwner = Cast<ATM_Character>(PossibleRifle->GetOwner());
+		if (IsValid(RifleOwner) && RifleOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+		{
+			RifleOwner->GainUltimateXP(XPValue);
+		}
+	}
+
+	BP_GiveXP(DamageCauser);
 }

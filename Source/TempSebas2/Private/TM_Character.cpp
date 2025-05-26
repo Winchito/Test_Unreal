@@ -28,6 +28,7 @@ ATM_Character::ATM_Character()
 	MeleeDamage = 25.0f;
 	bIsDoingMelee = false;
 	bCanUseWeapon = true;
+	bCanSprint = true;
 	MaxComboMultiplier = 4.0f;
 	CurrentComboMultiplier = 1.0f;
 
@@ -216,11 +217,21 @@ void ATM_Character::StartUltimate()
 
 	if (bCanUseUltimate && !bIsUsingUltimate)
 	{ 
+
 		CurrentUltimateDuration = MaxUltimateDuration;
 		bCanUseUltimate = false;
 
+		if (bIsSprinting)
+		{
+			//GetCharacterMovement()->MaxWalkSpeed = 0.0f;
+			StopSprinting();
+			//const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateMontage);
+			//GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginUltimateBehavior, StartUltimateMontageDuration, false);
+		}
+
 		if (IsValid(MyAnimInstance) && IsValid(UltimateMontage))
 		{
+			bCanSprint = false;
 			//GetCharacterMovement()->MaxWalkSpeed = 0.0f;
 			const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateMontage);
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginUltimateBehavior, StartUltimateMontageDuration, false);
@@ -253,16 +264,31 @@ void ATM_Character::StopUltimate()
 
 void ATM_Character::StartSprinting()
 {
-	GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+	if (bIsUsingUltimate)
+	{
+		return;
+	}
 
-	bIsSprinting = true;
-
+	if (bCanSprint)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 1000.0f;
+		bIsSprinting = true;
+	}
 }
 
 void ATM_Character::StopSprinting()
 {
-	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
-	bIsSprinting = false;
+	if (bIsUsingUltimate)
+	{
+		return;
+	}
+
+	if (bCanSprint)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+		bIsSprinting = false;
+	}
+
 }
 
 void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -367,6 +393,7 @@ void ATM_Character::UpdateUltimateDuration(float Value)
 	if (CurrentUltimateDuration == 0.0f)
 	{
 		bIsUsingUltimate = false;
+		bCanSprint = true;
 
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 		PlayRate = 1.0f;
