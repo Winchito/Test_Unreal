@@ -14,6 +14,7 @@
 #include "Components/TM_HealthComponent.h"
 #include "Core/TM_GameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
 
 
 // Sets default values
@@ -291,6 +292,40 @@ void ATM_Character::StopSprinting()
 
 }
 
+void ATM_Character::StartDashing()
+{
+
+	FVector Velocity = GetVelocity();
+	FVector Direction = Velocity.GetSafeNormal();          
+	FVector ForwardVec = GetActorForwardVector();
+	FVector RightVec = GetActorRightVector();
+	const float Threshold = 0.1f;                          
+	const float DashStrength = 5000.f;                       
+
+	float ForwardDot = FVector::DotProduct(Direction, ForwardVec);
+	if (FMath::Abs(ForwardDot) > Threshold)
+	{
+		FVector DashDir = ForwardVec * FMath::Sign(ForwardDot);
+		LaunchCharacter(DashDir * DashStrength, true, true);
+		return;
+	}
+
+	float RightDot = FVector::DotProduct(Direction, RightVec);
+	if (FMath::Abs(RightDot) > Threshold)
+	{
+		FVector DashDir = RightVec * FMath::Sign(RightDot);
+		LaunchCharacter(DashDir * DashStrength, true, true);
+		return;
+	}
+
+	LaunchCharacter(ForwardVec * DashStrength, true, true);
+}
+
+void ATM_Character::StopDashing()
+{
+
+}
+
 void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (IsValid(OtherActor))
@@ -339,6 +374,11 @@ void ATM_Character::AddControllerPitchInput(float value)
 void ATM_Character::AddKey(FName NewKey)
 {
 	DoorKeys.Add(NewKey);
+}
+
+bool ATM_Character::TryAddHealth(float HealthToAdd)
+{
+	return HealthComponent->TryAddHealth(HealthToAdd);
 }
 
 bool ATM_Character::HasKey(FName KeyTag) {
@@ -452,6 +492,9 @@ void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATM_Character::StartSprinting);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATM_Character::StopSprinting);
+
+	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &ATM_Character::StartDashing);
+	PlayerInputComponent->BindAction("Dash", IE_Released, this, &ATM_Character::StopDashing);
 }
 
 

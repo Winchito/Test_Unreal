@@ -13,6 +13,8 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Particles/ParticleSystem.h"
 #include "Components/SphereComponent.h"
+#include "Items/TM_Item.h"
+#include "Enemy/TM_BotSpawner.h"
 
 // Sets default values
 ATM_Bot::ATM_Bot()
@@ -41,6 +43,8 @@ ATM_Bot::ATM_Bot()
 	ExplosionRadius = 50.0f;
 
 	XPValue = 20.f;
+
+	LootProbability = 100.0f;
 
 }
 
@@ -122,6 +126,15 @@ void ATM_Bot::TakingDamage(UTM_HealthComponent* CurrentHealthComponent, AActor* 
 
 	if (CurrentHealthComponent->IsDead())
 	{
+		//if (IsValid(DamageCauser))
+		//{
+		//	ATM_Rifle* CharacterCauser = Cast<ATM_Character>(DamageCauser);
+		//	if (IsValid(CharacterCauser) && CharacterCauser->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+		//	{
+		//		TrySpawnLoot();
+		//	}
+		//}
+
 		SelfDestruction();
 	}
 }
@@ -148,6 +161,11 @@ void ATM_Bot::SelfDestruction()
 	if (bDebug)
 	{
 		DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 20, FColor::Red, true, 5.0f, 0, 2.0f);
+	}
+
+	if (IsValid(MySpawner))
+	{
+		MySpawner->NotifyBotDead();
 	}
 
 	Destroy();
@@ -180,6 +198,7 @@ void ATM_Bot::GiveXP(AActor* DamageCauser)
 	if (IsValid(PossiblePlayer) && PossiblePlayer->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 	{
 		PossiblePlayer->GainUltimateXP(XPValue);
+		TrySpawnLoot();
 	}
 
 	ATM_Rifle* PossibleRifle = Cast<ATM_Rifle>(DamageCauser);
@@ -189,8 +208,29 @@ void ATM_Bot::GiveXP(AActor* DamageCauser)
 		if (IsValid(RifleOwner) && RifleOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 		{
 			RifleOwner->GainUltimateXP(XPValue);
+			TrySpawnLoot();
 		}
 	}
 
 	BP_GiveXP(DamageCauser);
+}
+
+bool ATM_Bot::TrySpawnLoot()
+{
+	if (!IsValid(LootItemClass))
+	{
+		return false;
+	}
+
+	float SelectedProbability = FMath::RandRange(0.0f, 100.0f);
+
+	if (SelectedProbability <= LootProbability)
+	{
+		FActorSpawnParameters SpawnParameter;
+		SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		GetWorld()->SpawnActor<ATM_Item>(LootItemClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParameter);
+	}
+
+	return true;
+
 }

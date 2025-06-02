@@ -6,6 +6,9 @@
 #include "Weapons/TM_Rifle.h"
 #include "Components/TM_HealthComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Items/TM_Item.h"
+#include "AIModule/Classes/Perception/AISense_Damage.h"
+#include "Enemy/Controller/TM_AIController.h"
 
 ATM_Enemy::ATM_Enemy()
 {
@@ -13,11 +16,16 @@ ATM_Enemy::ATM_Enemy()
 	bLoopPath = false;
 	WaitingTimeOnPathPoint = 1.0f;
 	XPValue = 20.0f;
+	LootProbability = 100.0f;
 }
 
 void ATM_Enemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	MyAIController = Cast<ATM_AIController>(GetController());
+
+	HealthComponent->OnHealthChangeDelegate.AddDynamic(this, &ATM_Enemy::HealthChanged);
 	HealthComponent->OnDeathDelegate.AddDynamic(this, &ATM_Enemy::GiveXP);
 }
 
@@ -27,6 +35,7 @@ void ATM_Enemy::GiveXP(AActor* DamageCauser)
 	if(IsValid(PossiblePlayer) && PossiblePlayer->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 	{
 		PossiblePlayer->GainUltimateXP(XPValue);
+		TrySpawnLoot();
 	}
 
 	ATM_Rifle* PossibleRifle = Cast<ATM_Rifle>(DamageCauser);
@@ -36,11 +45,55 @@ void ATM_Enemy::GiveXP(AActor* DamageCauser)
 		if (IsValid(RifleOwner) && RifleOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 		{
 			RifleOwner->GainUltimateXP(XPValue);
+			TrySpawnLoot();
 		}
 	}
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	BP_GiveXP(DamageCauser);
+}
+
+bool ATM_Enemy::TrySpawnLoot()
+{
+	if (!IsValid(LootItemClass))
+	{
+		return false;
+	}
+
+	float SelectedProbability = FMath::RandRange(0.0f, 100.0f);
+
+	if (SelectedProbability <= LootProbability)
+	{
+		FActorSpawnParameters SpawnParameter;
+		SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		GetWorld()->SpawnActor<ATM_Item>(LootItemClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParameter);
+	}
+
+	return true;
+
+}
+
+void ATM_Enemy::HealthChanged(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (!IsValid(MyAIController))
+	{
+		return;
+	}
+
+	if (CurrentHealthComponent->IsDead())
+	{
+		MyAIController->UnPossess();
+	}
+	else
+	{
+		ATM_Rifle* Rifle = Cast<ATM_Rifle>(DamageCauser);
+		if (IsValid(Rifle))
+		{
+			AActor* RifleOwner = Rifle->GetOwner();
+			MyAIController->SetReceivingDamage(true);
+			UAISense_Damage::ReportDamageEvent(GetWorld(), this, RifleOwner, Damage, RifleOwner->GetActorLocation(), FVector::ZeroVector);
+		}
+	}
 }
 

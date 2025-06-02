@@ -49,11 +49,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsDead() const {return bIsDead;};
 
+	bool TryAddHealth(float HealthToAdd);
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	void TakingDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	
 		
 };

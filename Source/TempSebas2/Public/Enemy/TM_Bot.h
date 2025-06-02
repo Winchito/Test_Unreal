@@ -12,6 +12,8 @@ class UTM_HealthComponent;
 class UMaterialInstanceDynamic;
 class UParticleSystem;
 class USphereComponent;
+class ATM_Item;
+class ATM_BotSpawner;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_Bot : public APawn
@@ -55,6 +57,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bot Ultimate XP")
 	float XPValue;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loot System")
+	float LootProbability;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Bot")
 	FVector NextPathPoint;
 
@@ -67,6 +72,12 @@ protected:
 	UParticleSystem* ExplosionEffect;
 
 	FTimerHandle TimerHandle_SelfDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loot System")
+	TSubclassOf<ATM_Item> LootItemClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
+	ATM_BotSpawner* MySpawner;
 
 public:
 
@@ -97,10 +108,12 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void BP_GiveXP(AActor* DamageCauser);
 
+	bool TrySpawnLoot();
+
 public:	
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
+	void SetSpawner(ATM_BotSpawner* NewSpawner) { MySpawner = NewSpawner; };
 };

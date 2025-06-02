@@ -55,4 +55,25 @@ void UTM_HealthComponent::TakingDamage(AActor* DamagedActor, float Damage, const
 	}
 }
 
+bool UTM_HealthComponent::TryAddHealth(float HealthToAdd)
+{
+	if (bIsDead)
+	{
+		return false;
+	}
+
+	if (Health == MaxHealth)
+	{
+		return false;
+	}
+
+	Health = FMath::Clamp(Health + HealthToAdd, 0.0f, MaxHealth);
+
+	if (bDebug)
+	{
+		UE_LOG(LogTemp, Log, TEXT("My health is: %s"), *FString::SanitizeFloat(Health));
+	}
+
+	return true;
+}
 

@@ -77,6 +77,9 @@ protected:
 	bool bIsSprinting;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	bool bIsMoving;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	bool bCanSprint;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
@@ -196,6 +199,10 @@ protected:
 
 	void StopSprinting();
 
+	void StartDashing();
+
+	void StopDashing();
+
 	UFUNCTION()
 	void MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
@@ -212,6 +219,8 @@ public:
 	virtual void AddControllerPitchInput(float value) override;
 
 	void AddKey(FName NewKey);
+
+	bool TryAddHealth(float HealthToAdd);
 
 	bool HasKey(FName KeyTag);
 
