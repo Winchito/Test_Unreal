@@ -82,6 +82,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	bool bCanSprint;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	bool bIsBurstModeActivated;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float MaxJumpsInAir;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float CurrentJumpsInAir;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
 	bool bUltimateWithTick;
 
@@ -180,6 +189,10 @@ protected:
 
 	virtual void StopJumping() override;
 
+	virtual void Landed(const FHitResult& Hit) override;
+
+	virtual bool CanJumpInternal_Implementation() const override;
+
 	virtual void StartWeaponAction();
 
 	virtual void StopWeaponAction();
@@ -202,6 +215,8 @@ protected:
 	void StartDashing();
 
 	void StopDashing();
+
+	void SetFireMode();
 
 	UFUNCTION()
 	void MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

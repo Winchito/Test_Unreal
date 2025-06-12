@@ -14,7 +14,7 @@ ATM_AIController::ATM_AIController()
 
 	LoopPathParameterName = "bLoopPath";
 	DirectionIndexParameterName = "DirectionIndex";
-	WaitingTimeParameterName   = "WaitingOnPathPoint";
+	WaitingTimeParameterName = "WaitingOnPathPoint";
 	CanSeePlayerParameterName = "bCanSeePlayer";
 	InvestigatingParameterName = "bIsInvestigating";
 	TargetLocationParameterName = "TargetLocation";
@@ -29,7 +29,7 @@ void ATM_AIController::BeginPlay()
 	{
 		RunBehaviorTree(EnemyBehaviorTree);
 	}
-	
+
 
 	MyEnemy = Cast<ATM_Enemy>(K2_GetPawn());
 	if (IsValid(MyEnemy))
@@ -49,6 +49,7 @@ void ATM_AIController::BeginPlay()
 
 void ATM_AIController::UpdateSenses(const TArray<AActor*>& UpdatedActors)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Entered updated senses 1"));
 	if (!IsValid(MyBlackBoard))
 	{
 		return;
@@ -56,6 +57,7 @@ void ATM_AIController::UpdateSenses(const TArray<AActor*>& UpdatedActors)
 
 	for (AActor* Actor : UpdatedActors)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Entered for"));
 		FActorPerceptionBlueprintInfo PerceptionInfo;
 		AIPerceptionComponent->GetActorsPerception(Actor, PerceptionInfo);
 

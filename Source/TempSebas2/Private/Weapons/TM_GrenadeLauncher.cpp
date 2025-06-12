@@ -13,6 +13,13 @@ ATM_GrenadeLauncher::ATM_GrenadeLauncher() {
 
 void ATM_GrenadeLauncher::StopAction()
 {
+	Super::StopAction();
+
+}
+
+void ATM_GrenadeLauncher::StartAction()
+{
+
 	Super::StartAction();
 
 	if (IsValid(CurrentOwnerCharacter))
@@ -25,10 +32,4 @@ void ATM_GrenadeLauncher::StopAction()
 			ATM_Projectile* CurrentProjectile = GetWorld()->SpawnActor<ATM_Projectile>(ProjectileClass, MuzzleSocketLocation, MuzzleSocketRotation);
 		}
 	}
-
-}
-
-void ATM_GrenadeLauncher::StartAction()
-{
-	Super::StopAction();
 }

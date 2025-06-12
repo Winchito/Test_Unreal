@@ -14,10 +14,10 @@ class TEMPSEBAS2_API ATM_SidePlatform : public AActor
 protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-		USceneComponent* CustomRootComponent;
+	USceneComponent* CustomRootComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-		UStaticMeshComponent* PlatformMeshComponent;
+	UStaticMeshComponent* PlatformMeshComponent;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Platform")

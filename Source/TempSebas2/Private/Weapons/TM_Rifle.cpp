@@ -15,14 +15,57 @@ ATM_Rifle::ATM_Rifle()
 	TraceLenght = 10000.0f;
 	MuzzleSocketName = "SCK_Muzzle";
 
+	MaxBurstToShoot = 3;
+	TimeBetweenShots = 0.1f;
+	BurstCount = 0;
+	bIsWeaponBursting = false;
+
 }
 
 void ATM_Rifle::StartAction()
 {
+
+	if (bIsFiring)
+	{
+		return;
+	}
 	Super::StartAction();
 
 	//UE_LOG(LogTemp, Log, TEXT("Player is firing!"));
 
+	if (bIsWeaponBursting)
+	{
+		BurstCount = 0;
+		bIsFiring = true;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_Burst, this, &ATM_Rifle::StartWeaponBursting, TimeBetweenShots, true);
+	}
+	else 
+	{
+		FireWeapon();
+	}
+
+}
+
+
+void ATM_Rifle::StopAction()
+{
+	Super::StopAction();
+
+	//BurstCount = 0;
+	//GetWorld()->GetTimerManager().ClearTimer(TimerHandle_Burst);
+
+	//UE_LOG(LogTemp, Log, TEXT("Player has stop firing"));
+}
+
+void ATM_Rifle::SetFiringMode(bool bManageWeaponBursting)
+{
+	bIsWeaponBursting = bManageWeaponBursting;
+}
+
+
+
+void ATM_Rifle::FireWeapon()
+{
 	AActor* CurrentOwner = GetOwner();
 	if (IsValid(CurrentOwner)) {
 		FVector EyeLocation;
@@ -86,16 +129,25 @@ void ATM_Rifle::StartAction()
 				}
 			}
 		}
+
+	}
+}
+
+void ATM_Rifle::StartWeaponBursting()
+{
+
+	if (BurstCount < MaxBurstToShoot)
+	{
+		FireWeapon();
+		BurstCount++;
+	}
+	else
+	{
+		BurstCount = 0;
+		bIsFiring = false;
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_Burst);
 	}
 
+
 }
-
-
-void ATM_Rifle::StopAction()
-{
-	Super::StopAction();
-
-	//UE_LOG(LogTemp, Log, TEXT("Player has stop firing"));
-}
-
 

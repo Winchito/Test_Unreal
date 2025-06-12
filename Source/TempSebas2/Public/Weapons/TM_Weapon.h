@@ -20,7 +20,7 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-		float Damage;
+	float Damage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		TSubclassOf<UDamageType> DamageType;
@@ -32,22 +32,22 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Weapon")
-		void BP_StartAction();
+	void BP_StartAction();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Weapon")
-		void BP_StopAction();
+	void BP_StopAction();
 
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-		virtual void StartAction();
+	virtual void StartAction();
 
 	UFUNCTION(BlueprintCallable)
-		virtual void StopAction();
+	virtual void StopAction();
 
 	UFUNCTION(BlueprintCallable)
-		void SetCharacterOwner(ACharacter* NewOwner);
+	void SetCharacterOwner(ACharacter* NewOwner);
 
 };

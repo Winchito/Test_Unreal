@@ -22,32 +22,56 @@ public:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "LineTrace")
-		float TraceLenght;
+	float TraceLenght;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	float TimeBetweenShots;
 
 	UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "LineTrace|Debug")
-		bool bDrawLineTrace;
+	bool bDrawLineTrace;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	bool bIsWeaponBursting;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	bool bIsFiring;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	int MaxBurstToShoot;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	int BurstCount;
 
 	UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "Effects")
-		FName MuzzleSocketName;
+	FName MuzzleSocketName;
 
 	UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "Effects")
-		FName TraceParamName;
+	FName TraceParamName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
-		UParticleSystem* MuzzleEfect;
+	UParticleSystem* MuzzleEfect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
-		UParticleSystem* ImpactEffect;
+	UParticleSystem* ImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
-		UParticleSystem* TraceEffect;
+	UParticleSystem* TraceEffect;
 
+	FTimerHandle TimerHandle_Burst;
 
 protected:
 
 	virtual void StartAction() override;
 
 	virtual void StopAction() override;
+
+	void FireWeapon();
+
+	void StartWeaponBursting();
+
+public:
+
+	void SetFiringMode(bool bManageWeaponBursting);
 
 };
 

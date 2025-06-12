@@ -6,6 +6,7 @@
 #include "Gameframework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Weapons/TM_Weapon.h"
+#include "Weapons/TM_Rifle.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
@@ -52,6 +53,9 @@ ATM_Character::ATM_Character()
 
 	HealthComponent = CreateDefaultSubobject<UTM_HealthComponent>(TEXT("HealthComponent"));
 
+
+	bIsBurstModeActivated = false;
+
 	bUltimateWithTick = true;
 	MaxUltimateXP = 100.0f;
 	MaxUltimateDuration = 10.0f;
@@ -61,7 +65,9 @@ ATM_Character::ATM_Character()
 	UltimatePlayRate = 2.0f;
 	PlayRate = 1.0f;
 	UltimateShotFrequency = 0.1f;
-	
+	MaxJumpsInAir = 2;
+	CurrentJumpsInAir = 0;
+
 }
 
 FVector ATM_Character::GetPawnViewLocation() const
@@ -112,8 +118,49 @@ void ATM_Character::MoveRight(float value)
 
 void ATM_Character::Jump()
 {
-	Super::Jump();
+
+	UCharacterMovementComponent* PlayerMovement = GetCharacterMovement();
+	//FVector Vel = PlayerMovement->Velocity;
+	//Vel.Z = PlayerMovement->JumpZVelocity;
+
+	//if (PlayerMovement->IsMovingOnGround())
+	//{
+	//	Super::Jump();
+	//}
+	//else if (CurrentJumpsInAir < MaxJumpsInAir)
+	//{
+	//	PlayerMovement->Velocity = Vel;
+	//	CurrentJumpsInAir++;
+	//}
+
+	if (PlayerMovement->IsMovingOnGround())
+	{
+		Super::Jump();
+	}else if (CurrentJumpsInAir < MaxJumpsInAir)
+	{
+		Super::Jump();
+		CurrentJumpsInAir++;
+	}
+
 }
+
+bool ATM_Character::CanJumpInternal_Implementation() const
+{
+	if (CurrentJumpsInAir < MaxJumpsInAir)
+	{
+		return true;
+	}
+	return Super::CanJumpInternal_Implementation();
+}
+
+
+void ATM_Character::Landed(const FHitResult& Hit)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Resetted CurrentJumpsInAir"));
+	Super::Landed(Hit);
+	CurrentJumpsInAir = 0;
+}
+
 
 void ATM_Character::StopJumping()
 {
@@ -269,6 +316,10 @@ void ATM_Character::StartSprinting()
 	{
 		return;
 	}
+	if (GetCharacterMovement()->IsFalling())
+	{
+		return;
+	}
 
 	if (bCanSprint)
 	{
@@ -294,6 +345,10 @@ void ATM_Character::StopSprinting()
 
 void ATM_Character::StartDashing()
 {
+	if (GetCharacterMovement()->IsFalling())
+	{
+		return;
+	}
 
 	FVector Velocity = GetVelocity();
 	FVector Direction = Velocity.GetSafeNormal();          
@@ -324,6 +379,17 @@ void ATM_Character::StartDashing()
 void ATM_Character::StopDashing()
 {
 
+}
+
+void ATM_Character::SetFireMode()
+{
+	ATM_Rifle* CurrentRifle = Cast<ATM_Rifle>(CurrentWeapon);
+
+	if (IsValid(CurrentRifle))
+	{
+		bIsBurstModeActivated = !bIsBurstModeActivated;
+		CurrentRifle->SetFiringMode(bIsBurstModeActivated);
+	}
 }
 
 void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -495,6 +561,8 @@ void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &ATM_Character::StartDashing);
 	PlayerInputComponent->BindAction("Dash", IE_Released, this, &ATM_Character::StopDashing);
+
+	PlayerInputComponent->BindAction("SetFireMode", IE_Pressed, this, &ATM_Character::SetFireMode);
 }
 
 
