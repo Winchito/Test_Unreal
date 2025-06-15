@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Weapons/TM_Weapon.h"
 #include "Weapons/TM_Rifle.h"
+#include "Weapons/TM_GrenadeLauncher.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
@@ -67,6 +68,9 @@ ATM_Character::ATM_Character()
 	UltimateShotFrequency = 0.1f;
 	MaxJumpsInAir = 2;
 	CurrentJumpsInAir = 0;
+
+	LongShotThreshold = 0.099f;
+	bIsLongShotActivated = false;
 
 }
 
@@ -156,7 +160,6 @@ bool ATM_Character::CanJumpInternal_Implementation() const
 
 void ATM_Character::Landed(const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Resetted CurrentJumpsInAir"));
 	Super::Landed(Hit);
 	CurrentJumpsInAir = 0;
 }
@@ -176,16 +179,48 @@ void ATM_Character::StartWeaponAction()
 	if (bIsSprinting) {
 		return;
 	}
-	if (IsValid(CurrentWeapon)) {
-		CurrentWeapon->StartAction();
 
-		if (bIsUsingUltimate)
+	if (IsValid(CurrentWeapon)) {
+
+		ATM_GrenadeLauncher* PossibleGrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
+		if (IsValid(PossibleGrenadeLauncher))
 		{
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_AutomaticShoot, CurrentWeapon, &ATM_Weapon::StartAction, UltimateShotFrequency, true);
+			
+			bIsLongShotActivated = false;
+
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_LongShootGrenadeLauncher, this, &ATM_Character::SetLongPressGrenadeLauncher, LongShotThreshold, false);
+
+			PossibleGrenadeLauncher->SetLongPress(bIsLongShotActivated);
+
+			CurrentWeapon->StartAction();
+
 		}
+		else
+		{
+			CurrentWeapon->StartAction();
+
+			if (bIsUsingUltimate)
+			{
+				GetWorld()->GetTimerManager().SetTimer(TimerHandle_AutomaticShoot, CurrentWeapon, &ATM_Weapon::StartAction, UltimateShotFrequency, true);
+			}
+		}
+
 	}
 
 }
+
+void ATM_Character::SetLongPressGrenadeLauncher()
+{
+	bIsLongShotActivated = true;
+
+	ATM_GrenadeLauncher* GrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
+	if (IsValid(GrenadeLauncher))
+	{
+		GrenadeLauncher->SetLongPress(bIsLongShotActivated);
+	}
+	
+}
+
 
 void ATM_Character::StopWeaponAction()
 {
@@ -195,8 +230,19 @@ void ATM_Character::StopWeaponAction()
 	}
 
 	if (IsValid(CurrentWeapon)) {
-		CurrentWeapon->StopAction();
 
+		ATM_GrenadeLauncher* PossibleGrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
+		if (IsValid(PossibleGrenadeLauncher))
+		{
+			GetWorldTimerManager().ClearTimer(TimerHandle_LongShootGrenadeLauncher);
+
+			if (bIsLongShotActivated)
+			{
+				CurrentWeapon->StopAction();
+			}
+
+		}
+		CurrentWeapon->StopAction();
 		if (bIsUsingUltimate)
 		{
 			GetWorld()->GetTimerManager().ClearTimer(TimerHandle_AutomaticShoot);

@@ -39,7 +39,6 @@ void ATM_LaunchPad::PlayerStepped(UPrimitiveComponent* OverlappedComponent, AAct
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("PlayerOverlapped!"));
 	if (IsValid(OtherActor))
 	{
 		ACharacter* CharacterPlayerToLaunch = Cast<ACharacter>(OtherActor);
@@ -54,7 +53,6 @@ void ATM_LaunchPad::PlayerStepped(UPrimitiveComponent* OverlappedComponent, AAct
 
 void ATM_LaunchPad::TriggerLaunchPad(bool LaunchPadAction)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Etered triggerlaunchpad function"));
 	bIsActivated = LaunchPadAction;
 }
 

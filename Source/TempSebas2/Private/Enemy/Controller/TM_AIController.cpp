@@ -49,7 +49,6 @@ void ATM_AIController::BeginPlay()
 
 void ATM_AIController::UpdateSenses(const TArray<AActor*>& UpdatedActors)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Entered updated senses 1"));
 	if (!IsValid(MyBlackBoard))
 	{
 		return;
@@ -57,7 +56,6 @@ void ATM_AIController::UpdateSenses(const TArray<AActor*>& UpdatedActors)
 
 	for (AActor* Actor : UpdatedActors)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Entered for"));
 		FActorPerceptionBlueprintInfo PerceptionInfo;
 		AIPerceptionComponent->GetActorsPerception(Actor, PerceptionInfo);
 

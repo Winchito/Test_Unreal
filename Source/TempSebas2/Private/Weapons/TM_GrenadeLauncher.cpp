@@ -15,6 +15,24 @@ void ATM_GrenadeLauncher::StopAction()
 {
 	Super::StopAction();
 
+	if (bIsLongPress)
+	{
+		if (IsValid(CurrentOwnerCharacter) && IsValid(CurrentProjectile))
+		{
+			CurrentProjectile->Explode();
+		}
+	}
+
+}
+
+void ATM_GrenadeLauncher::SetLongPress(bool bStatus)
+{
+	bIsLongPress = bStatus;
+	if(IsValid(CurrentProjectile))
+	{
+		CurrentProjectile->SetLongPress(bIsLongPress);
+	}
+
 }
 
 void ATM_GrenadeLauncher::StartAction()
@@ -27,9 +45,14 @@ void ATM_GrenadeLauncher::StartAction()
 		USkeletalMeshComponent* CharacterMeshComponent = CurrentOwnerCharacter->GetMesh();
 		if (IsValid(CharacterMeshComponent))
 		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = CurrentOwnerCharacter;
+
 			FVector MuzzleSocketLocation = CharacterMeshComponent->GetSocketLocation(MuzzleSocketName);
 			FRotator MuzzleSocketRotation = CharacterMeshComponent->GetSocketRotation(MuzzleSocketName);
-			ATM_Projectile* CurrentProjectile = GetWorld()->SpawnActor<ATM_Projectile>(ProjectileClass, MuzzleSocketLocation, MuzzleSocketRotation);
+			CurrentProjectile = GetWorld()->SpawnActor<ATM_Projectile>(ProjectileClass, MuzzleSocketLocation, MuzzleSocketRotation, SpawnParams);
+
 		}
 	}
 }

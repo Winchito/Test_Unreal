@@ -39,21 +39,17 @@ void ATM_LaunchPadTrigger::BeginPlay()
 
 void ATM_LaunchPadTrigger::ActivateLaunchPad(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("PlayerOverlapped! on Trigger!"));
 	if (IsValid(OtherActor))
 	{
 		ACharacter* CharacterPlayerToTrigger = Cast<ACharacter>(OtherActor);
-		UE_LOG(LogTemp, Warning, TEXT("Entered If trigger 1"));
 		if (IsValid(CharacterPlayerToTrigger))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Entered If trigger 2"));
 			bIsLaunchTriggerActivated = !bIsLaunchTriggerActivated;
 			ChangeMaterialColor(bIsLaunchTriggerActivated);
 			for (ATM_LaunchPad* LaunchPad : LaunchPadCategories)
 			{
 				if (LaunchPad)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Entered If trigger 3"));
 					LaunchPad->TriggerLaunchPad(bIsLaunchTriggerActivated);
 				}
 			}

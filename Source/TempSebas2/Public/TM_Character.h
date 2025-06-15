@@ -13,6 +13,7 @@ class UAnimMontage;
 class UAnimInstance;
 class UTM_HealthComponent;
 class ATM_GameMode;
+class ATM_GrenadeLauncher;
 
 UENUM()
 enum class ETM_CharacterType : uint8
@@ -85,6 +86,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	bool bIsBurstModeActivated;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	bool bIsLongShotActivated;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float MaxJumpsInAir;
 
@@ -133,6 +137,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Ultimate|Abilities")
 	float PlayRate;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+	float LongShotThreshold;
+
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
 	FName FPSCameraSocketName;
 
@@ -166,8 +173,12 @@ protected:
 	FTimerHandle UltimateTimerHandle;
 
 	FTimerHandle TimerHandle_AutomaticShoot;
+
+	FTimerHandle TimerHandle_LongShootGrenadeLauncher;
 	
 	FTimerHandle TimerHandle_BeginUltimateBehavior;
+
+	//FTimerHandle TimerHandle_DelayedShot;
 
 public:
 	// Sets default values for this character's properties
@@ -184,6 +195,8 @@ protected:
 	void MoveForward(float value);
 
 	void MoveRight(float value);
+
+	void SetLongPressGrenadeLauncher();
 
 	virtual void Jump() override;
 

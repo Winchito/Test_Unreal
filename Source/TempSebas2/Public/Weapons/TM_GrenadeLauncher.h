@@ -20,11 +20,22 @@ public:
 
 protected:
 
+	UPROPERTY(BlueprintReadOnly, Category = "GL Properties")
+	bool bIsLongPress;
+
+	UPROPERTY(BlueprintReadOnly, Category = "GL Properties")
+	bool bTriggerReleased;
+
+	FTimerHandle TimerHandle_FloorFuseHandle;
+
 	UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "Effects")
-		FName MuzzleSocketName;
+	FName MuzzleSocketName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Grenade Launcher")
-		TSubclassOf<ATM_Projectile> ProjectileClass;
+	TSubclassOf<ATM_Projectile> ProjectileClass;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Grenade Launcher")
+	ATM_Projectile* CurrentProjectile;
 
 protected:
 
@@ -32,5 +43,8 @@ protected:
 
 	virtual void StopAction() override;
 
+public:
+
+	void SetLongPress(bool bStatus);
 
 };
