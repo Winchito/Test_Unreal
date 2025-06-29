@@ -9,6 +9,8 @@
 #include "Items/TM_Item.h"
 #include "AIModule/Classes/Perception/AISense_Damage.h"
 #include "Enemy/Controller/TM_AIController.h"
+#include "TeleportProjectile.h"
+#include "Weapons/TM_Projectile.h"
 
 ATM_Enemy::ATM_Enemy()
 {
@@ -31,6 +33,12 @@ void ATM_Enemy::BeginPlay()
 
 void ATM_Enemy::GiveXP(AActor* DamageCauser)
 {
+	const FString CauserName = DamageCauser
+		? DamageCauser->GetName()
+		: TEXT("NULL");
+
+	UE_LOG(LogTemp, Warning, TEXT("Intento de XP %s"), *CauserName);
+
 	ATM_Character* PossiblePlayer = Cast<ATM_Character>(DamageCauser);
 	if(IsValid(PossiblePlayer) && PossiblePlayer->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 	{
@@ -45,6 +53,29 @@ void ATM_Enemy::GiveXP(AActor* DamageCauser)
 		if (IsValid(RifleOwner) && RifleOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 		{
 			RifleOwner->GainUltimateXP(XPValue);
+			TrySpawnLoot();
+		}
+	}
+
+	ATeleportProjectile* PossibleTeleportProjectile = Cast<ATeleportProjectile>(DamageCauser);
+	if (IsValid(PossibleTeleportProjectile))
+	{
+		ATM_Character* TeleportProjectileOwner = Cast<ATM_Character>(PossibleTeleportProjectile->GetOwner());
+		if (IsValid(TeleportProjectileOwner) && TeleportProjectileOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+		{
+			TeleportProjectileOwner->GainUltimateXP(XPValue);
+			TrySpawnLoot();
+		}
+	}
+
+	ATM_Projectile* PossibleProjectile = Cast<ATM_Projectile>(DamageCauser);
+	if (IsValid(PossibleProjectile))
+	{
+		APawn* InstigatorPawn = PossibleProjectile->GetInstigator();
+		ATM_Character* PossibleProjectileOwner = Cast<ATM_Character>(InstigatorPawn);
+		if (IsValid(PossibleProjectileOwner) && PossibleProjectileOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+		{
+			PossibleProjectileOwner->GainUltimateXP(XPValue);
 			TrySpawnLoot();
 		}
 	}

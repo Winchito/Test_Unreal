@@ -56,6 +56,11 @@ ATM_Projectile::ATM_Projectile()
 void ATM_Projectile::OnProjectileCollision(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 
+	if (bIsLongTrigger)
+	{
+		return;
+	}
+
 	if (CheckForGround(Hit))
 	{
 		FVector IncomingVelocity = HitComponent->GetComponentVelocity();

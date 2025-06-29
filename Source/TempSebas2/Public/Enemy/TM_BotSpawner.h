@@ -8,6 +8,7 @@
 
 class UBillboardComponent;
 class ATM_Bot;
+class UBoxComponent;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_BotSpawner : public AActor
@@ -18,6 +19,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UBillboardComponent* SpawnerBillboardComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UBoxComponent* BoxComponentCollider;
 
 protected:
 
@@ -52,6 +56,9 @@ protected:
 	void SpawnBot();
 
 	FVector GetSpawnPoint();
+
+	UFUNCTION()
+	void OnEntrandoTest(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:
 

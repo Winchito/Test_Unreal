@@ -5,6 +5,7 @@
 #include "Components/BillboardComponent.h"
 #include "Enemy/TM_Bot.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 ATM_BotSpawner::ATM_BotSpawner()
@@ -12,8 +13,11 @@ ATM_BotSpawner::ATM_BotSpawner()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SpawnerBillboardComponent = CreateAbstractDefaultSubobject<UBillboardComponent>(TEXT("PathBillboard"));
+	SpawnerBillboardComponent = CreateDefaultSubobject<UBillboardComponent>(TEXT("PathBillboard"));
 	RootComponent = SpawnerBillboardComponent;
+
+	BoxComponentCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("PadTriggerComponent"));
+	BoxComponentCollider->SetupAttachment(RootComponent);
 
 	bIsActive = true;
 	MaxBotCounter = 1;
@@ -27,6 +31,8 @@ void ATM_BotSpawner::BeginPlay()
 	Super::BeginPlay();
 	
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_SpawnBot, this, &ATM_BotSpawner::SpawnBot, TimeToSpawn, true);
+
+	BoxComponentCollider->OnComponentBeginOverlap.AddDynamic(this, &ATM_BotSpawner::OnEntrandoTest);
 
 }
 
@@ -73,6 +79,11 @@ FVector ATM_BotSpawner::GetSpawnPoint()
 	{
 		return GetActorLocation();
 	}
+}
+
+void ATM_BotSpawner::OnEntrandoTest(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Overlaped!"));
 }
 
 void ATM_BotSpawner::NotifyBotDead()

@@ -16,8 +16,13 @@
 #include "Components/TM_HealthComponent.h"
 #include "Core/TM_GameMode.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/PlayerController.h"
-
+#include "TM_FireBall.h"
+#include "Items/TM_LaunchPadTrigger.h"
+#include "TeleportProjectile.h"
+#include "DrawDebugHelpers.h"
+#include "GameFramework/DamageType.h"
 
 // Sets default values
 ATM_Character::ATM_Character()
@@ -28,6 +33,8 @@ ATM_Character::ATM_Character()
 	bUseFirstPersonView = true;
 	FPSCameraSocketName = "SCK_Camera";
 	MeleeSocketName = "SCK_Melee";
+	HandRangedMeleeSocketName = "SCK_RangedMelee";
+	TeleportProjectileSocketName = "Muzzle_03";
 	MeleeDamage = 25.0f;
 	bIsDoingMelee = false;
 	bCanUseWeapon = true;
@@ -48,6 +55,8 @@ ATM_Character::ATM_Character()
 
 	MeleeDetectorComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("MeleeDetectorComponent"));
 	MeleeDetectorComponent->SetupAttachment(GetMesh(), MeleeSocketName);
+
+	MeleeDetectorComponent->SetCollisionObjectType(COLLISION_ENEMY);    // test
 	MeleeDetectorComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeDetectorComponent->SetCollisionResponseToChannel(COLLISION_ENEMY, ECR_Overlap);
 	MeleeDetectorComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -72,6 +81,11 @@ ATM_Character::ATM_Character()
 	LongShotThreshold = 0.099f;
 	bIsLongShotActivated = false;
 
+	CurrentRangedMelees = 0;
+	MaxRangedMelees = 3;
+
+	TeleportRadialDamage = 100.0f;
+	TeleportRadialRadius = 3000.0f;
 }
 
 FVector ATM_Character::GetPawnViewLocation() const
@@ -301,6 +315,127 @@ void ATM_Character::StartMelee()
 
 }
 
+void ATM_Character::StartRangedMelee()
+{
+
+	const TArray<FName> AnimationNames = { "Melee1", "Melee2", "Melee3" };
+
+	//UE_LOG(LogTemp, Warning, TEXT("Entered melee"));
+
+	if (bIsDoingMelee && !bCanComboRangedMelee)
+	{
+		return;
+	}
+
+	if (CurrentRangedMelees == MaxRangedMelees)
+	{
+		StopRangedMelee();
+	}
+
+	if (bCanComboRangedMelee)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Entered melee if 1"));
+		if (IsValid(MyAnimInstance) && IsValid(RangedMeleeMontage))
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Entered if array value: %s"), *AnimationNames[CurrentRangedMelees].ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("Bool equal to: %s"), bCanComboRangedMelee ? TEXT("true") : TEXT("false"));
+
+			bIsDoingMelee = true;
+			MyAnimInstance->Montage_JumpToSection(AnimationNames[CurrentRangedMelees], RangedMeleeMontage);
+			CurrentRangedMelees++;
+		}
+	}
+	else
+	{
+		if (IsValid(MyAnimInstance) && IsValid(RangedMeleeMontage))
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Entered if  2 array value: %s"), *AnimationNames[CurrentRangedMelees].ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("Bool in if 2 equal to: %s"), bCanComboRangedMelee ? TEXT("true") : TEXT("false"));
+			bIsDoingMelee = true;
+			bCanComboRangedMelee = true;
+			MyAnimInstance->Montage_Play(RangedMeleeMontage, PlayRate);
+			CurrentRangedMelees++;
+		}
+	}
+
+	//if (!bIsDoingMelee)
+	//{
+	//	bIsDoingMelee = true;
+	//	bCanComboRangedMelee = true;
+	//	CurrentRangedMelees = 1;
+
+	//	MyAnimInstance->Montage_Play(RangedMeleeMontage, PlayRate);
+	//	return;
+	//}
+
+	//if (bCanComboRangedMelee && CurrentRangedMelees < AnimationNames.Num())
+	//{
+	//	bCanComboRangedMelee = false;
+	//	int32 SectionIdx = CurrentRangedMelees;
+	//	MyAnimInstance->Montage_JumpToSection(AnimationNames[SectionIdx], RangedMeleeMontage);
+	//	CurrentRangedMelees++;
+	//}
+
+	//LaunchFireball();
+	//MyAnimInstance->Montage_Stop(3, RangedMeleeMontage);
+}
+
+
+void ATM_Character::LaunchTeleportProjectile()
+{
+
+	FVector MuzzleSocketLocation = GetMesh()->GetSocketLocation(TeleportProjectileSocketName);
+	FRotator MuzzleSocketRotation = GetMesh()->GetSocketRotation(TeleportProjectileSocketName);
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = this;
+	GetWorld()->SpawnActor<ATeleportProjectile>(TeleportProjectileClass, MuzzleSocketLocation, MuzzleSocketRotation, SpawnParams);
+
+}
+
+
+void ATM_Character::TeleportToProjectile(FVector TeleportVector, FRotator RotatorVector)
+{
+	this->TeleportTo(TeleportVector, RotatorVector, false, false);
+}
+
+
+void ATM_Character::MakeTeleportDamage()
+{
+
+	TArray<AActor*> IgnoredActors;
+	//IgnoredActors.Add(this);
+	
+	DrawDebugSphere(GetWorld(), GetActorLocation(), TeleportRadialRadius, 20, FColor::Blue, true, 5.0f, 0, 2.0f);
+	UGameplayStatics::ApplyRadialDamage(GetWorld(), TeleportRadialDamage, GetActorLocation(), TeleportRadialRadius, UDamageType::StaticClass(), IgnoredActors, this, GetInstigatorController(), true);
+}
+
+
+void ATM_Character::LaunchFireball()
+{
+
+	FVector MuzzleSocketLocation = GetMesh()->GetSocketLocation(HandRangedMeleeSocketName);
+	FRotator MuzzleSocketRotation = GetMesh()->GetSocketRotation(HandRangedMeleeSocketName);
+	GetWorld()->SpawnActor<ATM_FireBall>(FireballClass, MuzzleSocketLocation, MuzzleSocketRotation);
+}
+
+void ATM_Character::StopRangedMelee()
+{
+	if (IsValid(MyAnimInstance))
+	{
+		MyAnimInstance->Montage_Stop(0.1f, RangedMeleeMontage);
+	}
+	// Reset completo
+	bIsDoingMelee = false;
+	bCanComboRangedMelee = false;
+	CurrentRangedMelees = 0;
+}
+
+void ATM_Character::SetRangedMeleeComboState(bool MeleeState)
+{
+	bCanComboRangedMelee = MeleeState;
+}
+
 void ATM_Character::StopMelee()
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Player stops melee action"));
@@ -317,10 +452,7 @@ void ATM_Character::StartUltimate()
 
 		if (bIsSprinting)
 		{
-			//GetCharacterMovement()->MaxWalkSpeed = 0.0f;
 			StopSprinting();
-			//const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateMontage);
-			//GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginUltimateBehavior, StartUltimateMontageDuration, false);
 		}
 
 		if (IsValid(MyAnimInstance) && IsValid(UltimateMontage))
@@ -336,6 +468,34 @@ void ATM_Character::StartUltimate()
 		}
 
 		BP_StartUltimate();
+	}
+}
+
+void ATM_Character::StartTeleportUltimate()
+{
+	if (bCanUseUltimate && !bIsUsingUltimate)
+	{
+		CurrentUltimateDuration = MaxUltimateDuration;
+		bCanUseUltimate = false;
+
+		if (bIsSprinting)
+		{
+			StopSprinting();
+		}
+
+		if (IsValid(MyAnimInstance) && IsValid(UltimateTeleportMontage))
+		{
+			bCanSprint = false;
+			//GetCharacterMovement()->MaxWalkSpeed = 0.0f;
+			const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateTeleportMontage);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginUltimateBehavior, StartUltimateMontageDuration, false);
+		}
+		else
+		{
+			BeginUltimateBehavior();
+		}
+
+		BP_StartTeleportUltimate();
 	}
 }
 
@@ -442,9 +602,19 @@ void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AA
 {
 	if (IsValid(OtherActor))
 	{
-		if (OtherActor == this) {
+		if (OtherActor == this)
+		{
 			return;
 		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Player entered function"));
+
+		ATM_LaunchPadTrigger* Pad = Cast<ATM_LaunchPadTrigger>(OtherActor);
+		if (Pad)
+		{
+			Pad->LaunchPadTrigger();
+		}
+
 
 		ATM_Character* MeleeTarget = Cast<ATM_Character>(OtherActor);
 		if (IsValid(MeleeTarget))
@@ -599,8 +769,15 @@ void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &ATM_Character::StartMelee);
 	PlayerInputComponent->BindAction("Melee", IE_Released, this, &ATM_Character::StopMelee);
 
+	PlayerInputComponent->BindAction("RangedMelee", IE_Pressed, this, &ATM_Character::StartRangedMelee);
+	//PlayerInputComponent->BindAction("RangedMelee", IE_Released, this, &ATM_Character::StopRangedMelee);
+
 	PlayerInputComponent->BindAction("Ultimate", IE_Pressed, this, &ATM_Character::StartUltimate);
 	PlayerInputComponent->BindAction("Ultimate", IE_Released, this, &ATM_Character::StopUltimate);
+
+	PlayerInputComponent->BindAction("TeleportUltimate", IE_Pressed, this, &ATM_Character::StartTeleportUltimate);
+
+	PlayerInputComponent->BindAction("TestButton", IE_Pressed, this, &ATM_Character::LaunchTeleportProjectile);
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATM_Character::StartSprinting);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATM_Character::StopSprinting);

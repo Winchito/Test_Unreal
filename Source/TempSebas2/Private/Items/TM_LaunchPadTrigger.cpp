@@ -7,6 +7,9 @@
 #include "GameFramework/Character.h"
 #include "TM_LaunchPad.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "TM_Character.h"
+#include "Components/CapsuleComponent.h" 
+#include "TempSebas2.h"
 
 // Sets default values
 ATM_LaunchPadTrigger::ATM_LaunchPadTrigger()
@@ -21,9 +24,14 @@ ATM_LaunchPadTrigger::ATM_LaunchPadTrigger()
 
 	PadTriggerColliderComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("PadTriggerComponent"));
 	PadTriggerColliderComponent->SetupAttachment(RootComponent);
-	PadTriggerColliderComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	PadTriggerColliderComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	PadTriggerColliderComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
-	PadTriggerColliderComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	PadTriggerColliderComponent->SetCollisionResponseToChannel(COLLISION_ENEMY, ECR_Overlap);
+
+	//PadTriggerColliderComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	//PadTriggerColliderComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	//PadTriggerColliderComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
 	bIsLaunchTriggerActivated = false;
 }
@@ -33,28 +41,38 @@ void ATM_LaunchPadTrigger::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PadTriggerColliderComponent->OnComponentBeginOverlap.AddDynamic(this, &ATM_LaunchPadTrigger::ActivateLaunchPad);
+	//PadTriggerColliderComponent->OnComponentBeginOverlap.AddDynamic(this, &ATM_LaunchPadTrigger::LaunchPadTrigger);
+
+	//PadTriggerColliderComponent->OnComponentBeginOverlap.AddDynamic(this, &ATM_LaunchPadTrigger::LaunchPadTrigger);
 	
 }
 
-void ATM_LaunchPadTrigger::ActivateLaunchPad(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ATM_LaunchPadTrigger::LaunchPadTrigger()
 {
-	if (IsValid(OtherActor))
-	{
-		ACharacter* CharacterPlayerToTrigger = Cast<ACharacter>(OtherActor);
-		if (IsValid(CharacterPlayerToTrigger))
+		//ACharacter* CharacterPlayerToTrigger = Cast<ACharacter>(OtherActor);
+		//if (IsValid(CharacterPlayerToTrigger))
+		//{
+		//	SetLaunchPadTriggerState();
+		//	ChangeMaterialColor(bIsLaunchTriggerActivated);
+		//	for (ATM_LaunchPad* LaunchPad : LaunchPadCategories)
+		//	{
+		//		if (LaunchPad)
+		//		{
+		//			LaunchPad->TriggerLaunchPad(bIsLaunchTriggerActivated);
+		//		}
+		//	}
+		//}
+
+		SetLaunchPadTriggerState();
+		ChangeMaterialColor(bIsLaunchTriggerActivated);
+		for (ATM_LaunchPad* LaunchPad : LaunchPadCategories)
 		{
-			bIsLaunchTriggerActivated = !bIsLaunchTriggerActivated;
-			ChangeMaterialColor(bIsLaunchTriggerActivated);
-			for (ATM_LaunchPad* LaunchPad : LaunchPadCategories)
+			if (LaunchPad)
 			{
-				if (LaunchPad)
-				{
-					LaunchPad->TriggerLaunchPad(bIsLaunchTriggerActivated);
-				}
+				LaunchPad->TriggerLaunchPad(bIsLaunchTriggerActivated);
 			}
 		}
-	}
+
 }
 
 void ATM_LaunchPadTrigger::ChangeMaterialColor(bool ColorTrigger)

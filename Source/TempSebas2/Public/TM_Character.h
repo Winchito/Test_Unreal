@@ -14,6 +14,8 @@ class UAnimInstance;
 class UTM_HealthComponent;
 class ATM_GameMode;
 class ATM_GrenadeLauncher;
+class ATM_FireBall;
+class ATeleportProjectile;
 
 UENUM()
 enum class ETM_CharacterType : uint8
@@ -71,6 +73,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Ultimate")
 	bool bIsUsingUltimate;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Ultimate")
+	bool bCanUseTeleportUltimate;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Game Over")
 	bool bHasToDestroy;
 
@@ -82,6 +87,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	bool bCanSprint;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ranged Melee")
+	bool bIsDoingRangedMelee;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ranged Melee")
+	bool bCanComboRangedMelee;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	bool bIsBurstModeActivated;
@@ -119,6 +130,18 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Ultimate|Time")
 	float CurrentUltimateDuration;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
+	float TeleportRadialDamage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
+	float TeleportRadialRadius;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
+	float MaxTeleportUltimateProjectiles;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Ultimate")
+	float CurrentTeleportUltimateProjectiles;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate|Time")
 	float UltimateFrequency;
 
@@ -140,11 +163,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float LongShotThreshold;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ranged Melee")
+	int MaxRangedMelees;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ranged Melee")
+	int CurrentRangedMelees;
+
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
 	FName FPSCameraSocketName;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Melee")
 	FName MeleeSocketName;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Melee")
+	FName HandRangedMeleeSocketName;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Melee")
+	FName TeleportProjectileSocketName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Key")
 	TArray<FName> DoorKeys;
@@ -160,11 +195,26 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	ATM_Weapon* CurrentWeapon;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Fireball")
+	ATM_FireBall* Fireball;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fireball")
+	TSubclassOf<ATM_FireBall> FireballClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fireball")
+	TSubclassOf<ATeleportProjectile> TeleportProjectileClass;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* MeleeMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* UltimateMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* RangedMeleeMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* UltimateTeleportMontage;
 
 	UAnimInstance* MyAnimInstance;
 
@@ -215,9 +265,14 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void StartMelee();
 
+	UFUNCTION(BlueprintCallable)
+	void StartRangedMelee();
+
 	void StopMelee();
 
 	void StartUltimate();
+
+	void StartTeleportUltimate();
 
 	void StopUltimate();
 
@@ -267,11 +322,29 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void GainUltimateXP(float XPGained);
 
+	UFUNCTION()
+	void LaunchFireball();
+
+	UFUNCTION()
+	void LaunchTeleportProjectile();
+
+	void TeleportToProjectile(FVector TeleportVector, FRotator RotatorVector);
+
+	void MakeTeleportDamage();
+
 	void UpdateUltimateDuration(float Value);
 
 	void UpdateUltimateDurationWithTimer();
 
 	void BeginUltimateBehavior();
+
+	void StopRangedMelee();
+
+	void SetRangedMeleeComboState(bool MeleeState);
+
+	UAnimInstance* GetAnimInstance() {return MyAnimInstance;};
+
+	UCapsuleComponent* GetMeleeDetectorComponent() { return MeleeDetectorComponent; };
 
 	UFUNCTION(BlueprintCallable)
 	ETM_CharacterType GetCharacterType() { return CharacterType; };
@@ -283,6 +356,9 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void BP_StartUltimate();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void BP_StartTeleportUltimate();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void BP_UpdateUltimateDuration(float Value);

@@ -3,6 +3,7 @@
 
 #include "TM_AnimNotifyStateMelee.h"
 #include "TM_Character.h"
+#include "Components/CapsuleComponent.h"
 
 void UTM_AnimNotifyStateMelee::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration)
 {

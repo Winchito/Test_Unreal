@@ -46,12 +46,18 @@ protected:
 
 protected:
 
-	UFUNCTION()
-	void ActivateLaunchPad(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	//UFUNCTION()
+	//void LaunchPadTrigger(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void ChangeMaterialColor(bool ColorTrigger);
+
+	void SetLaunchPadTriggerState() { bIsLaunchTriggerActivated = !bIsLaunchTriggerActivated; };
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+public:
+
+	void LaunchPadTrigger();
 };
