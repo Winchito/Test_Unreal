@@ -84,9 +84,16 @@ ATM_Character::ATM_Character()
 	CurrentRangedMelees = 0;
 	MaxRangedMelees = 3;
 
-	TeleportRadialDamage = 100.0f;
-	TeleportRadialRadius = 3000.0f;
+	MaxTeleportUltimateProjectiles = 3;
+	CurrentTeleportUltimateProjectiles = 0;
+	bCanUseTeleportUltimate = true;
 }
+
+/*
+* -------------------------------------------------------------------------------------------------------------------------
+* |											Character Initialization												      |
+* |------------------------------------------------------------------------------------------------------------------------
+*/
 
 FVector ATM_Character::GetPawnViewLocation() const
 {
@@ -99,6 +106,16 @@ FVector ATM_Character::GetPawnViewLocation() const
 	}
 
 	return Super::GetPawnViewLocation();
+}
+
+void ATM_Character::InitializeReferences()
+{
+	if (IsValid(GetMesh()))
+	{
+		MyAnimInstance = GetMesh()->GetAnimInstance();
+	}
+
+	GameModeReference = Cast<ATM_GameMode>(GetWorld()->GetAuthGameMode());
 }
 
 // Called when the game starts or when spawned
@@ -114,15 +131,44 @@ void ATM_Character::BeginPlay()
 	NormalWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 }
 
-void ATM_Character::InitializeReferences()
-{
-	if (IsValid(GetMesh())) 
-	{
-		MyAnimInstance = GetMesh()->GetAnimInstance();
-	}
 
-	GameModeReference = Cast<ATM_GameMode>(GetWorld()->GetAuthGameMode());
+void ATM_Character::AddControllerPitchInput(float value)
+{
+	//bIsLookInversion ? Super::AddControllerPitchInput(-value) : Super::AddControllerPitchInput(value);
+	Super::AddControllerPitchInput(bIsLookInversion ? -value : value);
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Health Component											          |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
+
+void ATM_Character::OnHealthChange(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (HealthComponent->IsDead() && GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+	{
+		if (IsValid(GameModeReference))
+		{
+			GameModeReference->GameOver(this);
+		}
+	}
+}
+
+bool ATM_Character::TryAddHealth(float HealthToAdd)
+{
+	return HealthComponent->TryAddHealth(HealthToAdd);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Movement															  |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
 
 void ATM_Character::MoveForward(float value)
 {
@@ -138,23 +184,11 @@ void ATM_Character::Jump()
 {
 
 	UCharacterMovementComponent* PlayerMovement = GetCharacterMovement();
-	//FVector Vel = PlayerMovement->Velocity;
-	//Vel.Z = PlayerMovement->JumpZVelocity;
-
-	//if (PlayerMovement->IsMovingOnGround())
-	//{
-	//	Super::Jump();
-	//}
-	//else if (CurrentJumpsInAir < MaxJumpsInAir)
-	//{
-	//	PlayerMovement->Velocity = Vel;
-	//	CurrentJumpsInAir++;
-	//}
-
 	if (PlayerMovement->IsMovingOnGround())
 	{
 		Super::Jump();
-	}else if (CurrentJumpsInAir < MaxJumpsInAir)
+	}
+	else if (CurrentJumpsInAir < MaxJumpsInAir)
 	{
 		Super::Jump();
 		CurrentJumpsInAir++;
@@ -184,337 +218,13 @@ void ATM_Character::StopJumping()
 	Super::StopJumping();
 }
 
-void ATM_Character::StartWeaponAction()
-{
-	if (!bCanUseWeapon)
-	{
-		return;
-	}
-	if (bIsSprinting) {
-		return;
-	}
-
-	if (IsValid(CurrentWeapon)) {
-
-		ATM_GrenadeLauncher* PossibleGrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
-		if (IsValid(PossibleGrenadeLauncher))
-		{
-			
-			bIsLongShotActivated = false;
-
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_LongShootGrenadeLauncher, this, &ATM_Character::SetLongPressGrenadeLauncher, LongShotThreshold, false);
-
-			PossibleGrenadeLauncher->SetLongPress(bIsLongShotActivated);
-
-			CurrentWeapon->StartAction();
-
-		}
-		else
-		{
-			CurrentWeapon->StartAction();
-
-			if (bIsUsingUltimate)
-			{
-				GetWorld()->GetTimerManager().SetTimer(TimerHandle_AutomaticShoot, CurrentWeapon, &ATM_Weapon::StartAction, UltimateShotFrequency, true);
-			}
-		}
-
-	}
-
-}
-
-void ATM_Character::SetLongPressGrenadeLauncher()
-{
-	bIsLongShotActivated = true;
-
-	ATM_GrenadeLauncher* GrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
-	if (IsValid(GrenadeLauncher))
-	{
-		GrenadeLauncher->SetLongPress(bIsLongShotActivated);
-	}
-	
-}
-
-
-void ATM_Character::StopWeaponAction()
-{
-	if (!bCanUseWeapon)
-	{
-		return;
-	}
-
-	if (IsValid(CurrentWeapon)) {
-
-		ATM_GrenadeLauncher* PossibleGrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
-		if (IsValid(PossibleGrenadeLauncher))
-		{
-			GetWorldTimerManager().ClearTimer(TimerHandle_LongShootGrenadeLauncher);
-
-			if (bIsLongShotActivated)
-			{
-				CurrentWeapon->StopAction();
-			}
-
-		}
-		CurrentWeapon->StopAction();
-		if (bIsUsingUltimate)
-		{
-			GetWorld()->GetTimerManager().ClearTimer(TimerHandle_AutomaticShoot);
-		}
-	}
-}
-
-void ATM_Character::CreateInitialWeapon()
-{
-	if (IsValid(InitialWeaponClass))
-	{
-		CurrentWeapon = GetWorld()->SpawnActor<ATM_Weapon>(InitialWeaponClass, GetActorLocation(), GetActorRotation());
-		if (IsValid(CurrentWeapon))
-		{
-			CurrentWeapon->SetCharacterOwner(this);
-			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		}
-	}
-}
-
-void ATM_Character::StartMelee()
-{
-	//UE_LOG(LogTemp, Warning, TEXT("Player starts melee action"));
-
-	if (bIsDoingMelee && !bCanMakeCombos)
-	{
-		return;
-	}
-
-	if (bCanMakeCombos)
-	{
-		if (bIsDoingMelee)
-		{
-			if (bIsComboEnable)
-			{
-				if (CurrentComboMultiplier < MaxComboMultiplier)
-				{
-					CurrentComboMultiplier++;
-					SetComboEnable(false);
-				}
-			}
-			else
-			{
-				return;
-			}
-		}
-
-	}
-
-	if (IsValid(MyAnimInstance) && IsValid(MeleeMontage))
-	{
-		MyAnimInstance->Montage_Play(MeleeMontage, PlayRate);
-	}
-
-	SetActionsState(true);
-
-}
-
-void ATM_Character::StartRangedMelee()
-{
-
-	const TArray<FName> AnimationNames = { "Melee1", "Melee2", "Melee3" };
-
-	//UE_LOG(LogTemp, Warning, TEXT("Entered melee"));
-
-	if (bIsDoingMelee && !bCanComboRangedMelee)
-	{
-		return;
-	}
-
-	if (CurrentRangedMelees == MaxRangedMelees)
-	{
-		StopRangedMelee();
-	}
-
-	if (bCanComboRangedMelee)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Entered melee if 1"));
-		if (IsValid(MyAnimInstance) && IsValid(RangedMeleeMontage))
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Entered if array value: %s"), *AnimationNames[CurrentRangedMelees].ToString());
-			//UE_LOG(LogTemp, Warning, TEXT("Bool equal to: %s"), bCanComboRangedMelee ? TEXT("true") : TEXT("false"));
-
-			bIsDoingMelee = true;
-			MyAnimInstance->Montage_JumpToSection(AnimationNames[CurrentRangedMelees], RangedMeleeMontage);
-			CurrentRangedMelees++;
-		}
-	}
-	else
-	{
-		if (IsValid(MyAnimInstance) && IsValid(RangedMeleeMontage))
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("Entered if  2 array value: %s"), *AnimationNames[CurrentRangedMelees].ToString());
-			//UE_LOG(LogTemp, Warning, TEXT("Bool in if 2 equal to: %s"), bCanComboRangedMelee ? TEXT("true") : TEXT("false"));
-			bIsDoingMelee = true;
-			bCanComboRangedMelee = true;
-			MyAnimInstance->Montage_Play(RangedMeleeMontage, PlayRate);
-			CurrentRangedMelees++;
-		}
-	}
-
-	//if (!bIsDoingMelee)
-	//{
-	//	bIsDoingMelee = true;
-	//	bCanComboRangedMelee = true;
-	//	CurrentRangedMelees = 1;
-
-	//	MyAnimInstance->Montage_Play(RangedMeleeMontage, PlayRate);
-	//	return;
-	//}
-
-	//if (bCanComboRangedMelee && CurrentRangedMelees < AnimationNames.Num())
-	//{
-	//	bCanComboRangedMelee = false;
-	//	int32 SectionIdx = CurrentRangedMelees;
-	//	MyAnimInstance->Montage_JumpToSection(AnimationNames[SectionIdx], RangedMeleeMontage);
-	//	CurrentRangedMelees++;
-	//}
-
-	//LaunchFireball();
-	//MyAnimInstance->Montage_Stop(3, RangedMeleeMontage);
-}
-
-
-void ATM_Character::LaunchTeleportProjectile()
-{
-
-	FVector MuzzleSocketLocation = GetMesh()->GetSocketLocation(TeleportProjectileSocketName);
-	FRotator MuzzleSocketRotation = GetMesh()->GetSocketRotation(TeleportProjectileSocketName);
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = this;
-	GetWorld()->SpawnActor<ATeleportProjectile>(TeleportProjectileClass, MuzzleSocketLocation, MuzzleSocketRotation, SpawnParams);
-
-}
-
-
-void ATM_Character::TeleportToProjectile(FVector TeleportVector, FRotator RotatorVector)
-{
-	this->TeleportTo(TeleportVector, RotatorVector, false, false);
-}
-
-
-void ATM_Character::MakeTeleportDamage()
-{
-
-	TArray<AActor*> IgnoredActors;
-	//IgnoredActors.Add(this);
-	
-	DrawDebugSphere(GetWorld(), GetActorLocation(), TeleportRadialRadius, 20, FColor::Blue, true, 5.0f, 0, 2.0f);
-	UGameplayStatics::ApplyRadialDamage(GetWorld(), TeleportRadialDamage, GetActorLocation(), TeleportRadialRadius, UDamageType::StaticClass(), IgnoredActors, this, GetInstigatorController(), true);
-}
-
-
-void ATM_Character::LaunchFireball()
-{
-
-	FVector MuzzleSocketLocation = GetMesh()->GetSocketLocation(HandRangedMeleeSocketName);
-	FRotator MuzzleSocketRotation = GetMesh()->GetSocketRotation(HandRangedMeleeSocketName);
-	GetWorld()->SpawnActor<ATM_FireBall>(FireballClass, MuzzleSocketLocation, MuzzleSocketRotation);
-}
-
-void ATM_Character::StopRangedMelee()
-{
-	if (IsValid(MyAnimInstance))
-	{
-		MyAnimInstance->Montage_Stop(0.1f, RangedMeleeMontage);
-	}
-	// Reset completo
-	bIsDoingMelee = false;
-	bCanComboRangedMelee = false;
-	CurrentRangedMelees = 0;
-}
-
-void ATM_Character::SetRangedMeleeComboState(bool MeleeState)
-{
-	bCanComboRangedMelee = MeleeState;
-}
-
-void ATM_Character::StopMelee()
-{
-	//UE_LOG(LogTemp, Warning, TEXT("Player stops melee action"));
-}
-
-void ATM_Character::StartUltimate()
-{
-
-	if (bCanUseUltimate && !bIsUsingUltimate)
-	{ 
-
-		CurrentUltimateDuration = MaxUltimateDuration;
-		bCanUseUltimate = false;
-
-		if (bIsSprinting)
-		{
-			StopSprinting();
-		}
-
-		if (IsValid(MyAnimInstance) && IsValid(UltimateMontage))
-		{
-			bCanSprint = false;
-			//GetCharacterMovement()->MaxWalkSpeed = 0.0f;
-			const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateMontage);
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginUltimateBehavior, StartUltimateMontageDuration, false);
-		}
-		else
-		{
-			BeginUltimateBehavior();
-		}
-
-		BP_StartUltimate();
-	}
-}
-
-void ATM_Character::StartTeleportUltimate()
-{
-	if (bCanUseUltimate && !bIsUsingUltimate)
-	{
-		CurrentUltimateDuration = MaxUltimateDuration;
-		bCanUseUltimate = false;
-
-		if (bIsSprinting)
-		{
-			StopSprinting();
-		}
-
-		if (IsValid(MyAnimInstance) && IsValid(UltimateTeleportMontage))
-		{
-			bCanSprint = false;
-			//GetCharacterMovement()->MaxWalkSpeed = 0.0f;
-			const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateTeleportMontage);
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginUltimateBehavior, StartUltimateMontageDuration, false);
-		}
-		else
-		{
-			BeginUltimateBehavior();
-		}
-
-		BP_StartTeleportUltimate();
-	}
-}
-
-void ATM_Character::BeginUltimateBehavior()
-{
-	bIsUsingUltimate = true;
-	GetCharacterMovement()->MaxWalkSpeed = UltimateWalkSpeed;
-	PlayRate = UltimatePlayRate;
-
-	if (!bUltimateWithTick)
-	{
-		GetWorld()->GetTimerManager().SetTimer(UltimateTimerHandle, this, &ATM_Character::UpdateUltimateDurationWithTimer, UltimateFrequency, true);
-	}
-}
-
-void ATM_Character::StopUltimate()
-{
-
-}
+ //-----------------------------------------------------------------------------------------------------------------------------------------------
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Movement Abilities											      |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
 
 void ATM_Character::StartSprinting()
 {
@@ -557,11 +267,11 @@ void ATM_Character::StartDashing()
 	}
 
 	FVector Velocity = GetVelocity();
-	FVector Direction = Velocity.GetSafeNormal();          
+	FVector Direction = Velocity.GetSafeNormal();
 	FVector ForwardVec = GetActorForwardVector();
 	FVector RightVec = GetActorRightVector();
-	const float Threshold = 0.1f;                          
-	const float DashStrength = 5000.f;                       
+	const float Threshold = 0.1f;
+	const float DashStrength = 5000.f;
 
 	float ForwardDot = FVector::DotProduct(Direction, ForwardVec);
 	if (FMath::Abs(ForwardDot) > Threshold)
@@ -587,6 +297,155 @@ void ATM_Character::StopDashing()
 
 }
 
+//---------------------------------------------------------------------------------------------------------------------------------
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Mechanics															  |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
+
+
+/*
+* ------------------------------Key Mechanic-----------------------------
+*/
+
+void ATM_Character::AddKey(FName NewKey)
+{
+	DoorKeys.Add(NewKey);
+}
+
+
+bool ATM_Character::HasKey(FName KeyTag) {
+	return DoorKeys.Contains(KeyTag);
+}
+
+//-------------------------------------------------------------------------
+
+/*
+* ------------------------------XP Mechanic-----------------------------
+*/
+
+void ATM_Character::GainUltimateXP(float XPGained)
+{
+	if (bCanUseUltimate || bIsUsingUltimate)
+	{
+		return;
+	}
+
+	CurrentUltimateXP = FMath::Clamp(CurrentUltimateXP + XPGained, 0.0f, MaxUltimateXP);
+
+	if (CurrentUltimateXP == MaxUltimateXP)
+	{
+		bCanUseUltimate = true;
+
+	}
+
+	BP_GainUltimateXP(XPGained);
+}
+
+//-------------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------------------------------------------------------------------
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Weapons															  |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
+
+void ATM_Character::CreateInitialWeapon()
+{
+	if (IsValid(InitialWeaponClass))
+	{
+		CurrentWeapon = GetWorld()->SpawnActor<ATM_Weapon>(InitialWeaponClass, GetActorLocation(), GetActorRotation());
+		if (IsValid(CurrentWeapon))
+		{
+			CurrentWeapon->SetCharacterOwner(this);
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
+	}
+}
+
+void ATM_Character::StartWeaponAction()
+{
+	if (!bCanUseWeapon)
+	{
+		return;
+	}
+	if (bIsSprinting) {
+		return;
+	}
+
+	if (IsValid(CurrentWeapon)) {
+
+		ATM_GrenadeLauncher* PossibleGrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
+		if (IsValid(PossibleGrenadeLauncher))
+		{
+			
+			bIsLongShotActivated = false;
+
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_LongShootGrenadeLauncher, this, &ATM_Character::SetLongPressGrenadeLauncher, LongShotThreshold, false);
+
+			PossibleGrenadeLauncher->SetLongPress(bIsLongShotActivated);
+
+			CurrentWeapon->StartAction();
+
+		}
+		else
+		{
+			CurrentWeapon->StartAction();
+
+			if (bIsUsingUltimate)
+			{
+				GetWorld()->GetTimerManager().SetTimer(TimerHandle_AutomaticShoot, CurrentWeapon, &ATM_Weapon::StartAction, UltimateShotFrequency, true);
+			}
+		}
+
+	}
+
+}
+void ATM_Character::SetLongPressGrenadeLauncher()
+{
+	bIsLongShotActivated = true;
+
+	ATM_GrenadeLauncher* GrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
+	if (IsValid(GrenadeLauncher))
+	{
+		GrenadeLauncher->SetLongPress(bIsLongShotActivated);
+	}
+	
+}
+
+void ATM_Character::StopWeaponAction()
+{
+	if (!bCanUseWeapon)
+	{
+		return;
+	}
+
+	if (IsValid(CurrentWeapon)) {
+
+		ATM_GrenadeLauncher* PossibleGrenadeLauncher = Cast<ATM_GrenadeLauncher>(CurrentWeapon);
+		if (IsValid(PossibleGrenadeLauncher))
+		{
+			GetWorldTimerManager().ClearTimer(TimerHandle_LongShootGrenadeLauncher);
+
+			if (bIsLongShotActivated)
+			{
+				CurrentWeapon->StopAction();
+			}
+
+		}
+		CurrentWeapon->StopAction();
+		if (bIsUsingUltimate)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(TimerHandle_AutomaticShoot);
+		}
+	}
+}
+
 void ATM_Character::SetFireMode()
 {
 	ATM_Rifle* CurrentRifle = Cast<ATM_Rifle>(CurrentWeapon);
@@ -596,6 +455,57 @@ void ATM_Character::SetFireMode()
 		bIsBurstModeActivated = !bIsBurstModeActivated;
 		CurrentRifle->SetFiringMode(bIsBurstModeActivated);
 	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Melee															  |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
+
+void ATM_Character::StartMelee()
+{
+	//UE_LOG(LogTemp, Warning, TEXT("Player starts melee action"));
+
+	if (bIsDoingMelee && !bCanMakeCombos)
+	{
+		return;
+	}
+
+	if (bCanMakeCombos)
+	{
+		if (bIsDoingMelee)
+		{
+			if (bIsComboEnable)
+			{
+				if (CurrentComboMultiplier < MaxComboMultiplier)
+				{
+					CurrentComboMultiplier++;
+					SetComboEnable(false);
+				}
+			}
+			else
+			{
+				return;
+			}
+		}
+
+	}
+
+	if (IsValid(MyAnimInstance) && IsValid(MeleeMontage))
+	{
+		MyAnimInstance->Montage_Play(MeleeMontage, PlayRate);
+	}
+
+	SetActionsState(true);
+
+}
+
+void ATM_Character::StopMelee()
+{
+	//UE_LOG(LogTemp, Warning, TEXT("Player stops melee action"));
 }
 
 void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -636,37 +546,6 @@ void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AA
 	}
 }
 
-void ATM_Character::OnHealthChange(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
-{
-	if (HealthComponent->IsDead() && GetCharacterType() == ETM_CharacterType::CharacterType_Player)
-	{
-		if (IsValid(GameModeReference))
-		{
-			GameModeReference->GameOver(this);
-		}
-	}
-}
-
-void ATM_Character::AddControllerPitchInput(float value)
-{
-	//bIsLookInversion ? Super::AddControllerPitchInput(-value) : Super::AddControllerPitchInput(value);
-	Super::AddControllerPitchInput(bIsLookInversion ? -value : value);
-}
-
-void ATM_Character::AddKey(FName NewKey)
-{
-	DoorKeys.Add(NewKey);
-}
-
-bool ATM_Character::TryAddHealth(float HealthToAdd)
-{
-	return HealthComponent->TryAddHealth(HealthToAdd);
-}
-
-bool ATM_Character::HasKey(FName KeyTag) {
-	return DoorKeys.Contains(KeyTag);
-}
-
 void ATM_Character::SetMeleeDetectorCollision(ECollisionEnabled::Type NewCollisionState)
 {
 	MeleeDetectorComponent->SetCollisionEnabled(NewCollisionState);
@@ -689,22 +568,125 @@ void ATM_Character::ResetCombo()
 	CurrentComboMultiplier = 1.0f;
 }
 
-void ATM_Character::GainUltimateXP(float XPGained)
+//------------------------------------------------------------------------------------------------------------------------------
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Ranged Melee													      |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
+
+void ATM_Character::StartRangedMelee()
 {
-	if (bCanUseUltimate || bIsUsingUltimate)
+
+	const TArray<FName> AnimationNames = { "Melee1", "Melee2", "Melee3" };
+
+	if (bIsDoingMelee && !bCanComboRangedMelee)
 	{
 		return;
 	}
 
-	CurrentUltimateXP = FMath::Clamp(CurrentUltimateXP + XPGained, 0.0f, MaxUltimateXP);
-
-	if (CurrentUltimateXP == MaxUltimateXP) 
+	if (CurrentRangedMelees == MaxRangedMelees)
 	{
-		bCanUseUltimate = true;
-		
+		StopRangedMelee();
 	}
 
-	BP_GainUltimateXP(XPGained);
+	if (bCanComboRangedMelee)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Entered melee if 1"));
+		if (IsValid(MyAnimInstance) && IsValid(RangedMeleeMontage))
+		{
+			bIsDoingMelee = true;
+			MyAnimInstance->Montage_JumpToSection(AnimationNames[CurrentRangedMelees], RangedMeleeMontage);
+			CurrentRangedMelees++;
+		}
+	}
+	else
+	{
+		if (IsValid(MyAnimInstance) && IsValid(RangedMeleeMontage))
+		{
+			bIsDoingMelee = true;
+			bCanComboRangedMelee = true;
+			MyAnimInstance->Montage_Play(RangedMeleeMontage, PlayRate);
+			CurrentRangedMelees++;
+		}
+	}
+}
+
+void ATM_Character::LaunchFireball()
+{
+
+	FVector MuzzleSocketLocation = GetMesh()->GetSocketLocation(HandRangedMeleeSocketName);
+	FRotator MuzzleSocketRotation = GetMesh()->GetSocketRotation(HandRangedMeleeSocketName);
+	GetWorld()->SpawnActor<ATM_FireBall>(FireballClass, MuzzleSocketLocation, MuzzleSocketRotation);
+}
+
+void ATM_Character::StopRangedMelee()
+{
+	if (IsValid(MyAnimInstance))
+	{
+		MyAnimInstance->Montage_Stop(0.1f, RangedMeleeMontage);
+	}
+	// Reset completo
+	bIsDoingMelee = false;
+	bCanComboRangedMelee = false;
+	CurrentRangedMelees = 0;
+}
+
+void ATM_Character::SetRangedMeleeComboState(bool MeleeState)
+{
+	bCanComboRangedMelee = MeleeState;
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------
+
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Ultimate													          |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
+
+void ATM_Character::StartUltimate()
+{
+
+	if (bCanUseUltimate && !bIsUsingUltimate)
+	{ 
+
+		CurrentUltimateDuration = MaxUltimateDuration;
+		bCanUseUltimate = false;
+
+		if (bIsSprinting)
+		{
+			StopSprinting();
+		}
+
+		if (IsValid(MyAnimInstance) && IsValid(UltimateMontage))
+		{
+			bCanSprint = false;
+			//GetCharacterMovement()->MaxWalkSpeed = 0.0f;
+			const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateMontage);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginUltimateBehavior, StartUltimateMontageDuration, false);
+		}
+		else
+		{
+			BeginUltimateBehavior();
+		}
+
+		BP_StartUltimate();
+	}
+}
+
+void ATM_Character::BeginUltimateBehavior()
+{
+	bIsUsingUltimate = true;
+	GetCharacterMovement()->MaxWalkSpeed = UltimateWalkSpeed;
+	PlayRate = UltimatePlayRate;
+
+	if (!bUltimateWithTick)
+	{
+		GetWorld()->GetTimerManager().SetTimer(UltimateTimerHandle, this, &ATM_Character::UpdateUltimateDurationWithTimer, 1.0f, true);
+	}
 }
 
 void ATM_Character::UpdateUltimateDuration(float Value)
@@ -734,6 +716,127 @@ void ATM_Character::UpdateUltimateDurationWithTimer()
 {
 	UpdateUltimateDuration(UltimateFrequency);
 }
+
+
+void ATM_Character::StopUltimate()
+{
+
+}
+//---------------------------------------------------------------------------------------------------------------------------------
+
+
+/*
+* |-----------------------------------------------------------------------------------------------------------------------|
+* |											Character Teleport Ultimate													  |
+* |-----------------------------------------------------------------------------------------------------------------------|
+*/
+
+void ATM_Character::StartTeleportUltimate()
+{
+	if (bCanUseUltimate || bIsUsingUltimate)
+	{
+		if (bCanUseTeleportUltimate)
+		{
+			if (CurrentTeleportUltimateProjectiles == 0)
+			{
+				CurrentUltimateDuration = MaxUltimateDuration;
+				GetWorld()->GetTimerManager().SetTimer(TimerHandle_BeginUltimateBehavior, this, &ATM_Character::BeginTeleportUltimateBehavior, UltimateFrequency, false);
+			}
+
+			if (bIsSprinting)
+			{
+				StopSprinting();
+			}
+
+			if (IsValid(MyAnimInstance) && IsValid(UltimateTeleportMontage))
+			{
+				const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateTeleportMontage);
+				CurrentTeleportUltimateProjectiles++;
+			}
+
+			if (CurrentTeleportUltimateProjectiles > MaxTeleportUltimateProjectiles - 1)
+			{
+				bIsUsingUltimate = false;
+				bCanUseUltimate = false;
+				CurrentTeleportUltimateProjectiles = 0;
+				CurrentUltimateDuration = 0.0f;
+				UpdateUltimateDuration(0.0f);
+				return;
+			}
+
+			BP_StartTeleportUltimate();
+		}
+	}
+
+}
+
+void ATM_Character::LaunchTeleportProjectile()
+{
+	FVector MuzzleSocketLocation = GetMesh()->GetSocketLocation(TeleportProjectileSocketName);
+	FRotator MuzzleSocketRotation = GetMesh()->GetSocketRotation(TeleportProjectileSocketName);
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = this;
+	GetWorld()->SpawnActor<ATeleportProjectile>(TeleportProjectileClass, MuzzleSocketLocation, MuzzleSocketRotation, SpawnParams);
+
+}
+
+
+void ATM_Character::TeleportToProjectile(FVector TeleportVector, FRotator RotatorVector)
+{
+	const TArray<FName> AnimationNames = { "TeleportPlayer" };
+	this->TeleportTo(TeleportVector, RotatorVector, false, false);
+	const float StartUltimateMontageDuration = MyAnimInstance->Montage_Play(UltimateTeleportMontage, 3.0f);
+	MyAnimInstance->Montage_JumpToSection(AnimationNames[0], UltimateTeleportMontage);
+	GetCharacterMovement()->MaxWalkSpeed = 0.0f;
+}
+
+void ATM_Character::BeginTeleportUltimateBehavior()
+{
+	bIsUsingUltimate = true;
+	if (!bUltimateWithTick)
+	{
+		GetWorld()->GetTimerManager().SetTimer(UltimateTimerHandle, this, &ATM_Character::UpdateTeleportUltimateDurationWithTimer, UltimateFrequency, true);
+	}
+}
+
+void ATM_Character::UpdateTeleportUltimateDurationWithTimer()
+{
+	UpdateTeleportUltimateDuration(UltimateFrequency);
+}
+
+void ATM_Character::UpdateTeleportUltimateDuration(float Value)
+{
+	CurrentUltimateDuration = FMath::Clamp(CurrentUltimateDuration - Value, 0.0f, MaxUltimateDuration);
+	BP_UpdateUltimateDuration(Value);
+
+	if (CurrentUltimateDuration == 0.0f)
+	{
+		bIsUsingUltimate = false;
+		bCanUseUltimate = false;
+		CurrentTeleportUltimateProjectiles = 0;
+
+		if (!bUltimateWithTick)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(UltimateTimerHandle);
+		}
+		CurrentUltimateXP = 0.0f;
+		BP_StopUltimate();
+	}
+}
+
+void ATM_Character::SetCharacterSpeed()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 700.0f;
+}
+
+/*
+* TODO: Update Timer with this ultimate. We are close :D 
+*/
+
+
+//---------------------------------------------------------------------------------------------------------------------------------
+
 
 // Called every frame
 void ATM_Character::Tick(float DeltaTime)

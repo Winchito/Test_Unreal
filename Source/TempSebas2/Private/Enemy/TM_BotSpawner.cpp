@@ -43,6 +43,8 @@ void ATM_BotSpawner::SpawnBot()
 		return;
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("Current bot counter:  %i"), CurrentBotsCounter);
+
 	if (CurrentBotsCounter >= MaxBotCounter)
 	{
 		return;
@@ -56,7 +58,7 @@ void ATM_BotSpawner::SpawnBot()
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		FTransform BotTransform = FTransform(FRotator::ZeroRotator, SpawnPoint);
 
-		ATM_Bot* NewBot = GetWorld()->SpawnActorDeferred<ATM_Bot>(BotClass, BotTransform);
+		ATM_Bot* NewBot = GetWorld()->SpawnActorDeferred<ATM_Bot>(BotClass, BotTransform, nullptr, nullptr, SpawnParameters.SpawnCollisionHandlingOverride);
 		if (IsValid(NewBot))
 		{
 			NewBot->SetSpawner(this);

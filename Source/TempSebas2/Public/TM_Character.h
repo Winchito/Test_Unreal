@@ -130,18 +130,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Ultimate|Time")
 	float CurrentUltimateDuration;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
-	float TeleportRadialDamage;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
-	float TeleportRadialRadius;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
-	float MaxTeleportUltimateProjectiles;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Ultimate")
-	float CurrentTeleportUltimateProjectiles;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate|Time")
 	float UltimateFrequency;
 
@@ -168,6 +156,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ranged Melee")
 	int CurrentRangedMelees;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
+	int MaxTeleportUltimateProjectiles;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Ultimate")
+	int CurrentTeleportUltimateProjectiles;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Aiming")
 	FName FPSCameraSocketName;
@@ -336,11 +330,21 @@ public:
 
 	void UpdateUltimateDurationWithTimer();
 
+	void UpdateTeleportUltimateDurationWithTimer();
+
+	void UpdateTeleportUltimateDuration(float Value);
+
 	void BeginUltimateBehavior();
+
+	void BeginTeleportUltimateBehavior();
 
 	void StopRangedMelee();
 
 	void SetRangedMeleeComboState(bool MeleeState);
+
+	void SetTeleportProjectileUltimateState(bool UltimateState) { bCanUseTeleportUltimate = UltimateState; };
+
+	void SetCharacterSpeed();
 
 	UAnimInstance* GetAnimInstance() {return MyAnimInstance;};
 

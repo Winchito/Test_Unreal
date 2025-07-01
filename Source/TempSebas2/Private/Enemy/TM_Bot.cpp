@@ -6,6 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "TM_Character.h"
 #include "Weapons/TM_Rifle.h"
+#include "TeleportProjectile.h"
+#include "Weapons/TM_Projectile.h"
 #include "NavigationSystem/Public/NavigationSystem.h"
 #include "NavigationSystem/Public/NavigationPath.h"
 #include "DrawDebugHelpers.h"
@@ -211,6 +213,30 @@ void ATM_Bot::GiveXP(AActor* DamageCauser)
 			TrySpawnLoot();
 		}
 	}
+
+	ATeleportProjectile* PossibleTeleportProjectile = Cast<ATeleportProjectile>(DamageCauser);
+	if (IsValid(PossibleTeleportProjectile))
+	{
+		ATM_Character* TeleportProjectileOwner = Cast<ATM_Character>(PossibleTeleportProjectile->GetOwner());
+		if (IsValid(TeleportProjectileOwner) && TeleportProjectileOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+		{
+			TeleportProjectileOwner->GainUltimateXP(XPValue);
+			TrySpawnLoot();
+		}
+	}
+
+	ATM_Projectile* PossibleProjectile = Cast<ATM_Projectile>(DamageCauser);
+	if (IsValid(PossibleProjectile))
+	{
+		APawn* InstigatorPawn = PossibleProjectile->GetInstigator();
+		ATM_Character* PossibleProjectileOwner = Cast<ATM_Character>(InstigatorPawn);
+		if (IsValid(PossibleProjectileOwner) && PossibleProjectileOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+		{
+			PossibleProjectileOwner->GainUltimateXP(XPValue);
+			TrySpawnLoot();
+		}
+	}
+
 
 	BP_GiveXP(DamageCauser);
 }

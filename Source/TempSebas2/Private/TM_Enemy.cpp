@@ -75,7 +75,6 @@ void ATM_Enemy::GiveXP(AActor* DamageCauser)
 		ATM_Character* PossibleProjectileOwner = Cast<ATM_Character>(InstigatorPawn);
 		if (IsValid(PossibleProjectileOwner) && PossibleProjectileOwner->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 		{
-			PossibleProjectileOwner->GainUltimateXP(XPValue);
 			TrySpawnLoot();
 		}
 	}

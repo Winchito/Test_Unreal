@@ -7,8 +7,12 @@
 #include "TeleportProjectile.generated.h"
 
 
+class UStaticMeshComponent;
 class USphereComponent;
+class UParticleSystem;
 class UProjectileMovementComponent;
+
+
 
 UCLASS()
 class TEMPSEBAS2_API ATeleportProjectile : public AActor
@@ -18,19 +22,16 @@ class TEMPSEBAS2_API ATeleportProjectile : public AActor
 
 protected:
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	USceneComponent* CustomRootComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USphereComponent* TeleportProjectileColliderComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USphereComponent* ProjectileColliderComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* ProjectileMeshComponent;
+	UStaticMeshComponent* TeleportProjectileMeshComponent;
 
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UProjectileMovementComponent* ProjectileMovementComponent;
+	UProjectileMovementComponent* TeleportProjectileMovementComponent;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BluePrintReadOnly, Category = "Projectile")
@@ -38,6 +39,18 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Projectile")
 	float MaxTimeToTravel;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
+	float TeleportRadialDamage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate")
+	float TeleportRadialRadius;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate Effect")
+	UParticleSystem* DamageAreaEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ultimate Effect")
+	UParticleSystem* ProjectileEffect;
 
 	FTimerHandle TimerHandle_MaxTimeToTravel;
 
