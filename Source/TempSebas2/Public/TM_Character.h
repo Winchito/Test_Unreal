@@ -16,6 +16,7 @@ class ATM_GameMode;
 class ATM_GrenadeLauncher;
 class ATM_FireBall;
 class ATeleportProjectile;
+class UParticleSystemComponent;
 
 UENUM()
 enum class ETM_CharacterType : uint8
@@ -46,6 +47,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UTM_HealthComponent* HealthComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UParticleSystemComponent* ParticleSystemComponent = nullptr;
 
 protected:
 
@@ -100,6 +104,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	bool bIsLongShotActivated;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Player Effects")
+	bool bIsBurning;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float MaxJumpsInAir;
 
@@ -150,6 +157,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	float LongShotThreshold;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage Effects")
+	float BurningDamage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ranged Melee")
 	int MaxRangedMelees;
@@ -210,6 +220,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
 	UAnimMontage* UltimateTeleportMontage;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire Particle")
+	UParticleSystem* FireEffectParticleSystem;
+
 	UAnimInstance* MyAnimInstance;
 
 	ATM_GameMode* GameModeReference;
@@ -222,7 +235,9 @@ protected:
 	
 	FTimerHandle TimerHandle_BeginUltimateBehavior;
 
-	//FTimerHandle TimerHandle_DelayedShot;
+	FTimerHandle TimerHandle_BurnPlayer;
+
+	FTimerHandle TimerHandle_BurnEnd;
 
 public:
 	// Sets default values for this character's properties
@@ -279,6 +294,10 @@ protected:
 	void StopDashing();
 
 	void SetFireMode();
+
+	void BurnPlayer();
+
+	void EndBurningPlayer();
 
 	UFUNCTION()
 	void MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -345,6 +364,8 @@ public:
 	void SetTeleportProjectileUltimateState(bool UltimateState) { bCanUseTeleportUltimate = UltimateState; };
 
 	void SetCharacterSpeed();
+
+	void SetPlayerOnFire(float FireDuration);
 
 	UAnimInstance* GetAnimInstance() {return MyAnimInstance;};
 

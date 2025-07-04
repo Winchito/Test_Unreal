@@ -23,6 +23,7 @@
 #include "TeleportProjectile.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/DamageType.h"
+#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values
 ATM_Character::ATM_Character()
@@ -87,6 +88,10 @@ ATM_Character::ATM_Character()
 	MaxTeleportUltimateProjectiles = 3;
 	CurrentTeleportUltimateProjectiles = 0;
 	bCanUseTeleportUltimate = true;
+
+	BurningDamage = 5.0f;
+
+	bIsBurning = false;
 }
 
 /*
@@ -160,6 +165,45 @@ bool ATM_Character::TryAddHealth(float HealthToAdd)
 {
 	return HealthComponent->TryAddHealth(HealthToAdd);
 }
+
+void ATM_Character::SetPlayerOnFire(float FireDuration)
+{
+	if (!bIsBurning)
+	{
+		if (FireEffectParticleSystem)
+		{
+			ParticleSystemComponent = UGameplayStatics::SpawnEmitterAttached(FireEffectParticleSystem, this->GetCapsuleComponent(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, FVector(3.0f), EAttachLocation::SnapToTarget, true);
+		}
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_BurnPlayer, this, &ATM_Character::BurnPlayer, 0.5f, true);
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle_BurnEnd, this, &ATM_Character::EndBurningPlayer, FireDuration, false);
+
+		bIsBurning = true;
+
+	}
+}
+
+void ATM_Character::BurnPlayer()
+{
+	UGameplayStatics::ApplyDamage(this, BurningDamage, GetInstigatorController(), this, UDamageType::StaticClass());
+}
+
+void ATM_Character::EndBurningPlayer()
+{
+	if (ParticleSystemComponent && ParticleSystemComponent->IsActive())
+	{
+		ParticleSystemComponent->DeactivateSystem();
+	}
+
+	GetWorldTimerManager().ClearTimer(TimerHandle_BurnPlayer);
+	GetWorldTimerManager().ClearTimer(TimerHandle_BurnEnd);
+
+	bIsBurning = false;
+
+
+}
+
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
