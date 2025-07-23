@@ -48,6 +48,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy Controller")
 	FName TargetLocationParameterName;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy Controller")
+	FName CanHideFromPlayerParameterName;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Enemy Controller")
 	ATM_Enemy* MyEnemy;
 

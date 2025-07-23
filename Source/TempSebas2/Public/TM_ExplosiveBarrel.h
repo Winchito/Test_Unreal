@@ -8,6 +8,7 @@
 
 
 class ATM_Fire;
+class UTM_HealthComponent;
 UCLASS()
 class TEMPSEBAS2_API ATM_ExplosiveBarrel : public AActor
 {
@@ -21,10 +22,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 		UStaticMeshComponent* BarrelMeshComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+		UTM_HealthComponent* HealthComponent;
+
+
 protected:
 
+	//UFUNCTION()
+	//void OnBarrelShooted(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
+
 	UFUNCTION()
-		void OnBarrelShooted(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
+	void OnBarrelShooted(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	void ExplodeBarrel();
 

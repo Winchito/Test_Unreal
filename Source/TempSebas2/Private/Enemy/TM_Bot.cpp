@@ -179,7 +179,7 @@ void ATM_Bot::StartCountDown(UPrimitiveComponent* OverlappedComponent, AActor* O
 	{
 		return;
 	}
-
+	
 	if (OtherActor == PlayerCharacter)
 	{
 		bIsStartingCountdown = true;

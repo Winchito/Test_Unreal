@@ -11,6 +11,7 @@
 #include "Enemy/Controller/TM_AIController.h"
 #include "TeleportProjectile.h"
 #include "Weapons/TM_Projectile.h"
+#include "Enemy/TM_HealerBot.h"
 
 ATM_Enemy::ATM_Enemy()
 {
@@ -19,6 +20,7 @@ ATM_Enemy::ATM_Enemy()
 	WaitingTimeOnPathPoint = 1.0f;
 	XPValue = 20.0f;
 	LootProbability = 100.0f;
+	bCanHide = false;
 }
 
 void ATM_Enemy::BeginPlay()
@@ -114,6 +116,13 @@ void ATM_Enemy::HealthChanged(UTM_HealthComponent* CurrentHealthComponent, AActo
 	if (CurrentHealthComponent->IsDead())
 	{
 		MyAIController->UnPossess();
+
+		if (HealerBotReference)
+		{
+			HealerBotReference->DettachEnemy();
+			HealerBotReference = nullptr;
+		}
+
 	}
 	else
 	{

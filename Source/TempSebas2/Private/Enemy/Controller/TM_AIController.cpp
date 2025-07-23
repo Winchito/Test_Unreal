@@ -18,6 +18,7 @@ ATM_AIController::ATM_AIController()
 	CanSeePlayerParameterName = "bCanSeePlayer";
 	InvestigatingParameterName = "bIsInvestigating";
 	TargetLocationParameterName = "TargetLocation";
+	CanHideFromPlayerParameterName = "bCanHideFromPlayer";
 }
 
 void ATM_AIController::BeginPlay()
@@ -42,6 +43,7 @@ void ATM_AIController::BeginPlay()
 		MyBlackBoard->SetValueAsBool(LoopPathParameterName, MyEnemy->GetLoopPath());
 		MyBlackBoard->SetValueAsInt(DirectionIndexParameterName, MyEnemy->GetDirectionIndex());
 		MyBlackBoard->SetValueAsFloat(WaitingTimeParameterName, MyEnemy->GetWaitingTime());
+		MyBlackBoard->SetValueAsBool(CanHideFromPlayerParameterName, MyEnemy->GetCanHide());
 	}
 
 	AIPerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &ATM_AIController::UpdateSenses);

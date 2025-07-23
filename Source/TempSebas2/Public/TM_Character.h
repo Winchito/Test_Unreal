@@ -14,6 +14,7 @@ class UAnimInstance;
 class UTM_HealthComponent;
 class ATM_GameMode;
 class ATM_GrenadeLauncher;
+class ATM_HealerBot;
 class ATM_FireBall;
 class ATeleportProjectile;
 class UParticleSystemComponent;
@@ -188,6 +189,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Key")
 	TArray<FName> DoorKeys;
 
+	UPROPERTY(BlueprintReadOnly, Category = "References")
+	ATM_HealerBot* HealerBotReference;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	ETM_CharacterType CharacterType;
 
@@ -265,8 +269,10 @@ protected:
 
 	virtual bool CanJumpInternal_Implementation() const override;
 
+	UFUNCTION(BlueprintCallable)
 	virtual void StartWeaponAction();
 
+	UFUNCTION(BlueprintCallable)
 	virtual void StopWeaponAction();
 
 	virtual void CreateInitialWeapon();
@@ -367,12 +373,16 @@ public:
 
 	void SetPlayerOnFire(float FireDuration);
 
+	void SetHealerReference(ATM_HealerBot* HealerReference) { HealerBotReference = HealerReference; };
+
 	UAnimInstance* GetAnimInstance() {return MyAnimInstance;};
 
 	UCapsuleComponent* GetMeleeDetectorComponent() { return MeleeDetectorComponent; };
 
 	UFUNCTION(BlueprintCallable)
 	ETM_CharacterType GetCharacterType() { return CharacterType; };
+
+	UTM_HealthComponent* GetHealthComponent() { return HealthComponent; };
 
 protected:
 

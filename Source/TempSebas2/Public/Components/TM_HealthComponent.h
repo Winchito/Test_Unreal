@@ -51,6 +51,8 @@ public:
 
 	bool TryAddHealth(float HealthToAdd);
 
+	float GetCurrentHealth() { return Health; };
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

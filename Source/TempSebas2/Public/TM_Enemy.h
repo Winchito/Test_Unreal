@@ -27,6 +27,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|NavigationPath")
 	bool bLoopPath;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Hiding")
+	bool bCanHide;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|NavigationPath")
 	int DirectionIndex;
 
@@ -70,4 +73,5 @@ public:
 	bool GetLoopPath() { return bLoopPath; };
 	int GetDirectionIndex() { return DirectionIndex; };
 	float GetWaitingTime() { return WaitingTimeOnPathPoint; };
+	bool GetCanHide() { return bCanHide; };	
 };
