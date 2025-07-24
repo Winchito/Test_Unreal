@@ -205,6 +205,26 @@ void ATM_Character::EndBurningPlayer()
 }
 
 
+void ATM_Character::StartHealingEffect()
+{
+	UE_LOG(LogTemp, Warning, TEXT("LLego aqui!"));
+	if (HealParticleSystem)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Y entro aqui!"));
+		ParticleSystemComponent = UGameplayStatics::SpawnEmitterAttached(HealParticleSystem, this->GetCapsuleComponent(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::SnapToTarget, true);
+	}
+
+}
+
+
+void ATM_Character::EndHealingEffect()
+{
+	if (ParticleSystemComponent && ParticleSystemComponent->IsActive())
+	{
+		ParticleSystemComponent->DeactivateSystem();
+	}
+}
+
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 

@@ -8,6 +8,7 @@
 
 
 class UTM_HealthComponent;
+class ATM_HealerBot;
 UCLASS()
 class TEMPSEBAS2_API ATM_Shield : public AActor
 {
@@ -22,7 +23,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UTM_HealthComponent* HealthComponent;
 
-	
+protected:
+
+	ATM_HealerBot* HealerBotReference;
+
 public:	
 	// Sets default values for this actor's properties
 	ATM_Shield();
@@ -36,6 +40,10 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Shield")
 	void BP_Destroy();
+
+public:
+
+	void SetHealerReference(ATM_HealerBot* HealerBotObject) { HealerBotReference = HealerBotObject; };
 
 public:	
 	// Called every frame

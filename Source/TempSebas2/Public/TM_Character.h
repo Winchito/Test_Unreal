@@ -227,6 +227,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire Particle")
 	UParticleSystem* FireEffectParticleSystem;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Heal Effect")
+	UParticleSystem* HealParticleSystem;
+
 	UAnimInstance* MyAnimInstance;
 
 	ATM_GameMode* GameModeReference;
@@ -372,6 +375,10 @@ public:
 	void SetCharacterSpeed();
 
 	void SetPlayerOnFire(float FireDuration);
+
+	void StartHealingEffect();
+
+	void EndHealingEffect();
 
 	void SetHealerReference(ATM_HealerBot* HealerReference) { HealerBotReference = HealerReference; };
 

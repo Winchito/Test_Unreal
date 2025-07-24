@@ -8,7 +8,7 @@
 
 
 class UStaticMeshComponent;
-class USphereComponent;
+//class USphereComponent;
 class UTM_HealthComponent;
 class ATM_Character;
 class ATM_BotSpawner;
@@ -26,9 +26,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 		UStaticMeshComponent* BotMeshComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-		USphereComponent* BotScannerColliderComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 		UBoxComponent* BotHealZoneColliderComponent;
@@ -64,6 +61,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bot Ultimate XP")
 		float XPValue;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bot Healing System")
+		float MinimumEnemyHealth;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loot System")
 		float LootProbability;
 
@@ -97,9 +97,11 @@ protected:
 	UMaterialInstanceDynamic* BotMaterial;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bot Effect")
-		UParticleSystem* ExplosionEffect;
+	UParticleSystem* ExplosionEffect;
 
-	FTimerHandle TimerHandle_SelfDamage;
+	FTimerHandle TimerHandle_AutoDestruct;
+
+	FTimerHandle TimerHandle_FollowEnemy;
 
 	FTimerHandle TimerHandle_HealEnemy;
 
@@ -117,9 +119,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Shield")
 	TSubclassOf<ATM_Shield> ShieldClass;
-
-	UPROPERTY(EditAnywhere, Category = "Shield")
-	float ShieldDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Healing Area")
 	TArray<ATM_Character*> EnemiesInZone;
@@ -147,18 +146,14 @@ protected:
 	void SelfDestruction();
 
 	UFUNCTION()
-	void EnteredScanningZone(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void LeavedScanningZone(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	UFUNCTION()
 	void EnteredHealZone(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
 	void LeavedHealZone(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	//void HealEnemy(ATM_Character* EnemyToHeal);
+	void CheckEnemyHealth();
+
+	void FollowEnemy(ATM_Character* Enemy);
 
 	void HealEnemies();
 
@@ -174,9 +169,6 @@ protected:
 
 	void RampageMode(float DeltaTime);
 
-	//UFUNCTION()
-	//	void LeavedHealZone(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
 public:
 	// Sets default values for this actor's properties
 	ATM_HealerBot();
@@ -189,6 +181,8 @@ public:
 
 	UFUNCTION()
 	void DettachEnemy();
+
+	void SetShieldState();
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

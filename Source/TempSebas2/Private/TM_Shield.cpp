@@ -4,6 +4,7 @@
 #include "TM_Shield.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TM_HealthComponent.h"
+#include "Enemy/TM_HealerBot.h"
 
 // Sets default values
 ATM_Shield::ATM_Shield()
@@ -33,6 +34,8 @@ void ATM_Shield::OnShieldShooted(UTM_HealthComponent* CurrentHealthComponent, AA
 {
 	if (CurrentHealthComponent->IsDead())
 	{
+		HealerBotReference->SetShieldState();
+		HealerBotReference = nullptr;
 		BP_Destroy();
 	}
 }
