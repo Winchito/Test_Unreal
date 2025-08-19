@@ -24,6 +24,7 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Core/TM_GameInstance.h"
 
 // Sets default values
 ATM_Character::ATM_Character()
@@ -92,6 +93,8 @@ ATM_Character::ATM_Character()
 	BurningDamage = 5.0f;
 
 	bIsBurning = false;
+
+	MainMenuMapName = "MainMenuMap";
 }
 
 /*
@@ -121,6 +124,8 @@ void ATM_Character::InitializeReferences()
 	}
 
 	GameModeReference = Cast<ATM_GameMode>(GetWorld()->GetAuthGameMode());
+
+	GameInstanceReference = Cast<UTM_GameInstance>(GetWorld()->GetGameInstance());
 }
 
 // Called when the game starts or when spawned
@@ -915,6 +920,17 @@ void ATM_Character::Tick(float DeltaTime)
 }
 
 
+void ATM_Character::GoToMainMenu()
+{
+	if (GameInstanceReference)
+	{
+		GameInstanceReference->SaveData();
+	}
+
+	UGameplayStatics::OpenLevel(GetWorld(), MainMenuMapName);
+}
+
+
 // Called to bind functionality to input
 void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -953,6 +969,8 @@ void ATM_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Dash", IE_Released, this, &ATM_Character::StopDashing);
 
 	PlayerInputComponent->BindAction("SetFireMode", IE_Pressed, this, &ATM_Character::SetFireMode);
+
+	PlayerInputComponent->BindAction("Exit", IE_Pressed, this, &ATM_Character::GoToMainMenu);
 }
 
 

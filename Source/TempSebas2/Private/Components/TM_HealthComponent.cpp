@@ -29,6 +29,8 @@ void UTM_HealthComponent::BeginPlay()
 	{
 		MyOwner->OnTakeAnyDamage.AddDynamic(this, &UTM_HealthComponent::TakingDamage);
 	}
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_UpdateInitialHealth, this, &UTM_HealthComponent::UpdateInitialHealth, 0.2f, false);
 	
 }
 
@@ -48,6 +50,7 @@ void UTM_HealthComponent::TakingDamage(AActor* DamagedActor, float Damage, const
 	}
 
 	OnHealthChangeDelegate.Broadcast(this, DamagedActor, Damage, DamageType, InstigatedBy, DamageCauser);
+	OnHealthUpdateDelegate.Broadcast(Health, MaxHealth);
 	
 	if (bDebug)
 	{
@@ -68,6 +71,7 @@ bool UTM_HealthComponent::TryAddHealth(float HealthToAdd)
 	}
 
 	Health = FMath::Clamp(Health + HealthToAdd, 0.0f, MaxHealth);
+	OnHealthUpdateDelegate.Broadcast(Health, MaxHealth);
 
 	if (bDebug)
 	{
@@ -75,5 +79,10 @@ bool UTM_HealthComponent::TryAddHealth(float HealthToAdd)
 	}
 
 	return true;
+}
+
+void UTM_HealthComponent::UpdateInitialHealth()
+{
+	OnHealthUpdateDelegate.Broadcast(Health, MaxHealth);
 }
 

@@ -17,6 +17,8 @@
 #include "Components/SphereComponent.h"
 #include "Items/TM_Item.h"
 #include "Enemy/TM_BotSpawner.h"
+#include "Items/TM_SpawnKey.h"
+#include "Core/TM_GameInstance.h"
 
 // Sets default values
 ATM_Bot::ATM_Bot()
@@ -46,7 +48,7 @@ ATM_Bot::ATM_Bot()
 
 	XPValue = 20.f;
 
-	LootProbability = 100.0f;
+	LootProbability = 25.0f;
 
 }
 
@@ -61,6 +63,8 @@ void ATM_Bot::BeginPlay()
 	{
 		PlayerCharacter = Cast<ATM_Character>(PlayerPawn);
 	}
+
+	GameInstanceReference = Cast<UTM_GameInstance>(GetWorld()->GetGameInstance());
 
 	HealthComponent->OnHealthChangeDelegate.AddDynamic(this, &ATM_Bot::TakingDamage);
 	HealthComponent->OnDeathDelegate.AddDynamic(this, &ATM_Bot::GiveXP);
@@ -136,6 +140,12 @@ void ATM_Bot::TakingDamage(UTM_HealthComponent* CurrentHealthComponent, AActor* 
 		//		TrySpawnLoot();
 		//	}
 		//}
+
+
+		if (IsValid(GameInstanceReference))
+		{
+			GameInstanceReference->AddEnemyDefeatedToCounter();
+		}
 
 		SelfDestruction();
 	}
@@ -243,18 +253,34 @@ void ATM_Bot::GiveXP(AActor* DamageCauser)
 
 bool ATM_Bot::TrySpawnLoot()
 {
-	if (!IsValid(LootItemClass))
+	if (!IsValid(HealthBoxItemClass) && !IsValid(KeyItemClass))
 	{
 		return false;
 	}
 
+	ATM_Item* Loot = nullptr;
+	FActorSpawnParameters SpawnParameter;
+	SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
 	float SelectedProbability = FMath::RandRange(0.0f, 100.0f);
 
-	if (SelectedProbability <= LootProbability)
+	if (MySpawner != nullptr)
 	{
-		FActorSpawnParameters SpawnParameter;
-		SpawnParameter.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		GetWorld()->SpawnActor<ATM_Item>(LootItemClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParameter);
+		if (SelectedProbability <= LootProbability)
+		{
+			Loot = GetWorld()->SpawnActor<ATM_Item>(KeyItemClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParameter);
+			if (ATM_SpawnKey* KeyItem = Cast<ATM_SpawnKey>(Loot))
+			{
+				KeyItem->SetSpawnerRef(MySpawner);
+			}
+			else
+			{
+				Loot = GetWorld()->SpawnActor<ATM_Item>(HealthBoxItemClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParameter);
+			}
+		}
+	}else
+	{
+		Loot = GetWorld()->SpawnActor<ATM_Item>(HealthBoxItemClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParameter);
 	}
 
 	return true;

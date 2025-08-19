@@ -18,6 +18,7 @@ class ATM_HealerBot;
 class ATM_FireBall;
 class ATeleportProjectile;
 class UParticleSystemComponent;
+class UTM_GameInstance;
 
 UENUM()
 enum class ETM_CharacterType : uint8
@@ -186,6 +187,9 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Melee")
 	FName TeleportProjectileSocketName;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Levels")
+	FName MainMenuMapName;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Key")
 	TArray<FName> DoorKeys;
 
@@ -233,6 +237,8 @@ protected:
 	UAnimInstance* MyAnimInstance;
 
 	ATM_GameMode* GameModeReference;
+
+	UTM_GameInstance* GameInstanceReference;
 
 	FTimerHandle UltimateTimerHandle;
 
@@ -313,6 +319,8 @@ protected:
 
 	UFUNCTION()
 	void OnHealthChange(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	void GoToMainMenu();
 
 public:	
 	// Called every frame

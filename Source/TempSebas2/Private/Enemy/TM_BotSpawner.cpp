@@ -6,6 +6,7 @@
 #include "Enemy/TM_Bot.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/BoxComponent.h"
+#include "TM_Character.h"
 
 // Sets default values
 ATM_BotSpawner::ATM_BotSpawner()
@@ -32,7 +33,7 @@ void ATM_BotSpawner::BeginPlay()
 	
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_SpawnBot, this, &ATM_BotSpawner::SpawnBot, TimeToSpawn, true);
 
-	BoxComponentCollider->OnComponentBeginOverlap.AddDynamic(this, &ATM_BotSpawner::OnEntrandoTest);
+	BoxComponentCollider->OnComponentBeginOverlap.AddDynamic(this, &ATM_BotSpawner::OnPlayerEntering);
 
 }
 
@@ -83,13 +84,27 @@ FVector ATM_BotSpawner::GetSpawnPoint()
 	}
 }
 
-void ATM_BotSpawner::OnEntrandoTest(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ATM_BotSpawner::OnPlayerEntering(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlaped!"));
+	if (bIsActive)
+	{
+		return;
+	}
+
+	if (ATM_Character* PossibleCharacter = Cast<ATM_Character>(OtherActor))
+	{
+		SetSpawnerState(true);
+	}
 }
 
 void ATM_BotSpawner::NotifyBotDead()
 {
 	CurrentBotsCounter--;
+}
+
+void ATM_BotSpawner::DisableSpawn()
+{
+	bIsActive = false;
+	BoxComponentCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 

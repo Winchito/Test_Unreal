@@ -7,7 +7,6 @@
 #include "TM_ActorRoutePaths.generated.h"
 
 class UBillboardComponent;
-
 UCLASS()
 class TEMPSEBAS2_API ATM_ActorRoutePaths : public AActor
 {

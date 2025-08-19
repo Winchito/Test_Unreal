@@ -14,6 +14,7 @@ class UParticleSystem;
 class USphereComponent;
 class ATM_Item;
 class ATM_BotSpawner;
+class UTM_GameInstance;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_Bot : public APawn
@@ -73,8 +74,13 @@ protected:
 
 	FTimerHandle TimerHandle_SelfDamage;
 
+	UTM_GameInstance* GameInstanceReference;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loot System")
-	TSubclassOf<ATM_Item> LootItemClass;
+	TSubclassOf<ATM_Item> HealthBoxItemClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Loot System")
+	TSubclassOf<ATM_Item> KeyItemClass;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
 	ATM_BotSpawner* MySpawner;
@@ -116,4 +122,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SetSpawner(ATM_BotSpawner* NewSpawner) { MySpawner = NewSpawner; };
+
+	ATM_BotSpawner* GetBotSpawner() { return MySpawner; };
 };

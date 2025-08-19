@@ -4,65 +4,66 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "TM_BotSpawner.generated.h"
+#include "TM_EnemySpawner.generated.h"
 
-class UBillboardComponent;
-class ATM_Bot;
+
 class UBoxComponent;
-
+class UBillboardComponent;
+class ATM_Enemy;
 UCLASS()
-class TEMPSEBAS2_API ATM_BotSpawner : public AActor
+class TEMPSEBAS2_API ATM_EnemySpawner : public AActor
 {
 	GENERATED_BODY()
 
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UBillboardComponent* SpawnerBillboardComponent;
+		UBillboardComponent* SpawnerBillboardComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UBoxComponent* BoxComponentCollider;
+		UBoxComponent* BoxComponentCollider;
 
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawner")
-	bool bIsActive;
+		bool bIsActive;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawner", meta = (UIMin = 1.0f, ClampMin = 1.0f))
-	int MaxBotCounter;
+		int MaxEnemyCounter;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
-	int CurrentBotsCounter;
+		int CurrentEnemyCounter;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawner", meta = (UIMin = 0.1f, ClampMin = 0.1f))
-	float TimeToSpawn;
+		float TimeToSpawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spawner", meta = (MakeEditWidget = true))
 	TArray<FVector> SpawnPoints;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spawner")
-	TSubclassOf<ATM_Bot> BotClass;
+		TSubclassOf<ATM_Enemy> EnemyClass;
 
 	FTimerHandle TimerHandle_SpawnBot;
+
 	
 public:	
 	// Sets default values for this actor's properties
-	ATM_BotSpawner();
+	ATM_EnemySpawner();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	void SpawnBot();
+	void SpawnEnemy();
 
 	FVector GetSpawnPoint();
 
 	UFUNCTION()
 	void OnPlayerEntering(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-public:
 
-	void NotifyBotDead();
+public:
+	void NotifyEnemyDead();
 
 	void SetSpawnerState(bool NewState) { bIsActive = NewState; };
 

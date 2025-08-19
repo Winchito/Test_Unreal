@@ -12,6 +12,7 @@
 #include "TeleportProjectile.h"
 #include "Weapons/TM_Projectile.h"
 #include "Enemy/TM_HealerBot.h"
+#include "Core/TM_GameInstance.h"
 
 ATM_Enemy::ATM_Enemy()
 {
@@ -117,6 +118,10 @@ void ATM_Enemy::HealthChanged(UTM_HealthComponent* CurrentHealthComponent, AActo
 	{
 		MyAIController->UnPossess();
 
+		if (IsValid(GameInstanceReference))
+		{
+			GameInstanceReference->AddEnemyDefeatedToCounter();
+		}
 		if (HealerBotReference)
 		{
 			HealerBotReference->DettachEnemy();

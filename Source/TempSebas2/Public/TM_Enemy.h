@@ -9,6 +9,7 @@
 class ATM_ActorRoutePaths;
 class ATM_Item;
 class ATM_AIController;
+class ATM_EnemySpawner;
 
 /**
  * 
@@ -51,6 +52,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "AI|Controller")
 	ATM_AIController* MyAIController;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
+	ATM_EnemySpawner* MySpawner;
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -71,7 +75,13 @@ protected:
 public:
 
 	bool GetLoopPath() { return bLoopPath; };
+
 	int GetDirectionIndex() { return DirectionIndex; };
+
 	float GetWaitingTime() { return WaitingTimeOnPathPoint; };
+
 	bool GetCanHide() { return bCanHide; };	
+
+	void SetSpawner(ATM_EnemySpawner* NewSpawner) { MySpawner = NewSpawner; };
+
 };

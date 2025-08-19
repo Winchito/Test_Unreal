@@ -11,6 +11,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangeSignature, UTM_Healt
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathSignature, AActor*, DamageCauser);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthUpdateSignature, float, CurrentHealth, float, MaxHealth);
+
 
 UCLASS( ClassGroup=(ROOM), meta=(BlueprintSpawnableComponent) )
 class TEMPSEBAS2_API UTM_HealthComponent : public UActorComponent
@@ -34,6 +36,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Health Component")
 	AActor* MyOwner;
 
+	FTimerHandle TimerHandle_UpdateInitialHealth;
+
 public: 
 
 	UPROPERTY(BlueprintAssignable)
@@ -41,6 +45,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnDeathSignature OnDeathDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthUpdateSignature OnHealthUpdateDelegate;
 
 public:	
 	// Sets default values for this component's properties
@@ -52,6 +59,8 @@ public:
 	bool TryAddHealth(float HealthToAdd);
 
 	float GetCurrentHealth() { return Health; };
+
+	void UpdateInitialHealth();
 
 protected:
 	// Called when the game starts
