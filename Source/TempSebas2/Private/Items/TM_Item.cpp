@@ -4,6 +4,7 @@
 #include "Items/TM_Item.h"
 #include "Components/SphereComponent.h"
 #include "TM_Character.h"
+#include "TM_GameMode.h"
 
 // Sets default values
 ATM_Item::ATM_Item()
@@ -27,6 +28,9 @@ ATM_Item::ATM_Item()
 void ATM_Item::BeginPlay()
 {
 	Super::BeginPlay();
+
+
+	GameModeReference = Cast<ATM_GameMode>(GetWorld()->GetAuthGameMode());
 	
 }
 

@@ -13,6 +13,8 @@
 #include "Weapons/TM_Projectile.h"
 #include "Enemy/TM_HealerBot.h"
 #include "Core/TM_GameInstance.h"
+#include "Components/WidgetComponent.h"
+#include "UI/Enemies/TM_EnemyHealthBar.h"
 
 ATM_Enemy::ATM_Enemy()
 {
@@ -22,6 +24,11 @@ ATM_Enemy::ATM_Enemy()
 	XPValue = 20.0f;
 	LootProbability = 100.0f;
 	bCanHide = false;
+
+
+	WidgetHealthBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetHealthBarComponent"));
+
+	WidgetHealthBarComponent->SetupAttachment(RootComponent);
 }
 
 void ATM_Enemy::BeginPlay()
@@ -32,6 +39,17 @@ void ATM_Enemy::BeginPlay()
 
 	HealthComponent->OnHealthChangeDelegate.AddDynamic(this, &ATM_Enemy::HealthChanged);
 	HealthComponent->OnDeathDelegate.AddDynamic(this, &ATM_Enemy::GiveXP);
+
+	UUserWidget* WidgetObject = WidgetHealthBarComponent->GetUserWidgetObject();
+	if (IsValid(WidgetObject))
+	{
+		EnemyHealthBar = Cast<UTM_EnemyHealthBar>(WidgetObject);
+		if (IsValid(EnemyHealthBar))
+		{
+			HealthComponent->OnHealthUpdateDelegate.AddDynamic(EnemyHealthBar, &UTM_EnemyHealthBar::UpdateHealth);
+			HideHealthBar();
+		}
+	}
 }
 
 void ATM_Enemy::GiveXP(AActor* DamageCauser)
@@ -114,6 +132,17 @@ void ATM_Enemy::HealthChanged(UTM_HealthComponent* CurrentHealthComponent, AActo
 		return;
 	}
 
+	if (bIsShowingHealthBar)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_HideHealthBar);
+	}
+	else
+	{
+		ShowHealthBar();
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_HideHealthBar, this, &ATM_Enemy::HideHealthBar, 1.0f, false);
+
 	if (CurrentHealthComponent->IsDead())
 	{
 		MyAIController->UnPossess();
@@ -122,11 +151,14 @@ void ATM_Enemy::HealthChanged(UTM_HealthComponent* CurrentHealthComponent, AActo
 		{
 			GameInstanceReference->AddEnemyDefeatedToCounter();
 		}
+
 		if (HealerBotReference)
 		{
 			HealerBotReference->DettachEnemy();
 			HealerBotReference = nullptr;
 		}
+
+		HideHealthBar();
 
 	}
 	else
@@ -139,5 +171,18 @@ void ATM_Enemy::HealthChanged(UTM_HealthComponent* CurrentHealthComponent, AActo
 			UAISense_Damage::ReportDamageEvent(GetWorld(), this, RifleOwner, Damage, RifleOwner->GetActorLocation(), FVector::ZeroVector);
 		}
 	}
+}
+
+void ATM_Enemy::ShowHealthBar()
+{
+	bIsShowingHealthBar = true;
+	EnemyHealthBar->SetVisibility(ESlateVisibility::Visible);
+
+}
+
+void ATM_Enemy::HideHealthBar()
+{
+	bIsShowingHealthBar = false;
+	EnemyHealthBar->SetVisibility(ESlateVisibility::Hidden);
 }
 

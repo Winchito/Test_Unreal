@@ -403,10 +403,12 @@ void ATM_Character::GainUltimateXP(float XPGained)
 	}
 
 	CurrentUltimateXP = FMath::Clamp(CurrentUltimateXP + XPGained, 0.0f, MaxUltimateXP);
+	OnUltimateUpdateDelegate.Broadcast(CurrentUltimateXP, MaxUltimateXP);
 
 	if (CurrentUltimateXP == MaxUltimateXP)
 	{
 		bCanUseUltimate = true;
+		OnUltimateStatusDelegate.Broadcast(true);
 
 	}
 
@@ -763,10 +765,14 @@ void ATM_Character::UpdateUltimateDuration(float Value)
 	CurrentUltimateDuration = FMath::Clamp(CurrentUltimateDuration - Value, 0.0f, MaxUltimateDuration);
 	BP_UpdateUltimateDuration(Value);
 
+	OnUltimateUpdateDelegate.Broadcast(CurrentUltimateDuration, MaxUltimateDuration);
+
 	if (CurrentUltimateDuration == 0.0f)
 	{
 		bIsUsingUltimate = false;
 		bCanSprint = true;
+
+		OnUltimateStatusDelegate.Broadcast(false);
 
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 		PlayRate = 1.0f;

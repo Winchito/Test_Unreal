@@ -4,6 +4,7 @@
 #include "TM_DoorKey.h"
 #include "Components/StaticMeshComponent.h"
 #include "TM_Character.h"
+#include "Core/TM_GameMode.h"
 
 
 ATM_DoorKey::ATM_DoorKey()
@@ -22,7 +23,18 @@ void ATM_DoorKey::Pickup(ATM_Character* PickupCharacter)
 {
 	Super::Pickup(PickupCharacter);
 
-	PickupCharacter->AddKey(KeyTag);
-	PickupCharacter->GainUltimateXP(XPValue);
-	Destroy();
+	if (IsValid(PickupCharacter) && PickupCharacter->GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+	{
+		if (IsValid(GameModeReference))
+		{
+			GameModeReference->AddKeyToCharacter(PickupCharacter, KeyTag);
+
+			PickupCharacter->GainUltimateXP(XPValue);
+
+		}
+
+		Destroy();
+	}
+
+
 }

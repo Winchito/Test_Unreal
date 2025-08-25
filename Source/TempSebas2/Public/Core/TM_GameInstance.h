@@ -6,9 +6,8 @@
 #include "Engine/GameInstance.h"
 #include "TM_GameInstance.generated.h"
 
-/**
- * 
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyKilledSignature, int, EnemiesDefeated);
+
 UCLASS()
 class TEMPSEBAS2_API UTM_GameInstance : public UGameInstance
 {
@@ -25,6 +24,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Enemy Data")
 	int EnemiesDefeatedCounter;
+
+public:
+
+	UPROPERTY(BlueprintAssignable)
+	FOnEnemyKilledSignature OnEnemyKilledDelegate;
 
 
 public:

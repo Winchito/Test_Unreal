@@ -8,6 +8,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "TM_SpectatingCamera.h"
 
+ATM_GameMode::ATM_GameMode()
+{
+	MainMenuMapName = "MainMenuMap";
+}
+
 void ATM_GameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -62,13 +67,26 @@ void ATM_GameMode::MoveCameraToSpectatingPoint(ATM_SpectatingCamera* SpectatingC
 
 }
 
+void ATM_GameMode::AddKeyToCharacter(ATM_Character* KeyOwner, FName KeyTag)
+{
+	if (IsValid(KeyOwner))
+	{
+		OnKeyAddedDelegate.Broadcast(KeyTag);
+		KeyOwner->AddKey(KeyTag);
+	}
+}
+
 void ATM_GameMode::Victory(ATM_Character* Character)
 {
 	Character->DisableInput(nullptr);
 
 	MoveCameraToSpectatingPoint(VictoryCamera, Character);
 
-	BP_Victory(Character);
+	OnVictoryDelegate.Broadcast();
+
+	GetWorld()->GetTimerManager().SetTimer(FTimerHandle_BackToMainMenu, this, &ATM_GameMode::BackToMainMenu, 3.0f, false);
+
+	BP_Victory(Character); 
 }
 
 void ATM_GameMode::GameOver(ATM_Character* Character)
@@ -87,7 +105,14 @@ void ATM_GameMode::GameOver(ATM_Character* Character)
 		MoveCameraToSpectatingPoint(GameOverCamera, Character);
 	}
 
-	
+	OnGameOverDelegate.Broadcast();
+
+	GetWorld()->GetTimerManager().SetTimer(FTimerHandle_BackToMainMenu, this, &ATM_GameMode::BackToMainMenu, 3.0f, false);
 
 	BP_GameOver(Character);
+}
+
+void ATM_GameMode::BackToMainMenu()
+{
+	UGameplayStatics::OpenLevel(GetWorld(), MainMenuMapName);
 }

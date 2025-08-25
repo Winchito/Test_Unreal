@@ -8,6 +8,7 @@
 
 class USphereComponent;
 class ATM_Character;
+class ATM_GameMode;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_Item : public AActor
@@ -17,6 +18,11 @@ class TEMPSEBAS2_API ATM_Item : public AActor
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	USphereComponent* MainColliderComponent;
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly)
+	ATM_GameMode* GameModeReference;
 	
 public:	
 

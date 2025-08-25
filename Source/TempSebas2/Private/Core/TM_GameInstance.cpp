@@ -13,6 +13,7 @@ UTM_GameInstance::UTM_GameInstance()
 void UTM_GameInstance::AddEnemyDefeatedToCounter()
 {
 	EnemiesDefeatedCounter++;
+	OnEnemyKilledDelegate.Broadcast(EnemiesDefeatedCounter);
 	BP_AddEnemyDefeatedToCounter();
 }
 

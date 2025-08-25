@@ -20,6 +20,10 @@ class ATeleportProjectile;
 class UParticleSystemComponent;
 class UTM_GameInstance;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUltimateUpdateSignature, float, CurrentUltimateXP, float, MaxUltimateXP);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUltimateStatusSignature, bool, bIsAvailable);
+
 UENUM()
 enum class ETM_CharacterType : uint8
 {
@@ -253,6 +257,14 @@ protected:
 	FTimerHandle TimerHandle_BurnEnd;
 
 public:
+
+	UPROPERTY(BlueprintAssignable)
+	FOnUltimateUpdateSignature OnUltimateUpdateDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnUltimateStatusSignature OnUltimateStatusDelegate;
+
+public:
 	// Sets default values for this character's properties
 	ATM_Character();
 
@@ -389,6 +401,13 @@ public:
 	void EndHealingEffect();
 
 	void SetHealerReference(ATM_HealerBot* HealerReference) { HealerBotReference = HealerReference; };
+
+	//Delegates HUD Ultimate Helpers
+	float GetCurrentUltimateXP() const { return CurrentUltimateXP; }
+
+	float GetMaxUltimateXP() const { return MaxUltimateXP; }
+
+	bool  CanUseUltimate() const { return bCanUseUltimate; }
 
 	UAnimInstance* GetAnimInstance() {return MyAnimInstance;};
 

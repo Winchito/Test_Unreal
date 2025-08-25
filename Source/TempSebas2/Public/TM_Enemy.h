@@ -10,6 +10,8 @@ class ATM_ActorRoutePaths;
 class ATM_Item;
 class ATM_AIController;
 class ATM_EnemySpawner;
+class UWidgetComponent;
+class UTM_EnemyHealthBar;
 
 /**
  * 
@@ -25,11 +27,19 @@ public:
 
 protected:
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UWidgetComponent* WidgetHealthBarComponent;
+
+protected:
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|NavigationPath")
 	bool bLoopPath;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|Hiding")
 	bool bCanHide;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	bool bIsShowingHealthBar;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI|NavigationPath")
 	int DirectionIndex;
@@ -54,6 +64,11 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
 	ATM_EnemySpawner* MySpawner;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	UTM_EnemyHealthBar* EnemyHealthBar;
+
+	FTimerHandle TimerHandle_HideHealthBar;
 
 protected:
 
@@ -83,5 +98,9 @@ public:
 	bool GetCanHide() { return bCanHide; };	
 
 	void SetSpawner(ATM_EnemySpawner* NewSpawner) { MySpawner = NewSpawner; };
+	
+	void ShowHealthBar();
+
+	void HideHealthBar();
 
 };
