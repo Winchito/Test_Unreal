@@ -15,6 +15,8 @@ class USphereComponent;
 class ATM_Item;
 class ATM_BotSpawner;
 class UTM_GameInstance;
+class UAudioComponent;
+class USoundCue;
 
 UCLASS()
 class TEMPSEBAS2_API ATM_Bot : public APawn
@@ -31,6 +33,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UTM_HealthComponent* HealthComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UAudioComponent* TimerSoundComponent;
 
 protected:
 
@@ -85,6 +90,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Spawner")
 	ATM_BotSpawner* MySpawner;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundCue* ExplosionSound;
+
 public:
 
 	// Sets default values for this pawn's properties
@@ -115,6 +123,10 @@ protected:
 	void BP_GiveXP(AActor* DamageCauser);
 
 	bool TrySpawnLoot();
+
+	void PlayTimerSound();
+
+	void PlayExplosionSound();
 
 public:	
 

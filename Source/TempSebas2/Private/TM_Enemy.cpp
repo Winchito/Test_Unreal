@@ -15,6 +15,7 @@
 #include "Core/TM_GameInstance.h"
 #include "Components/WidgetComponent.h"
 #include "UI/Enemies/TM_EnemyHealthBar.h"
+#include "Core/TM_GameMode.h"
 
 ATM_Enemy::ATM_Enemy()
 {
@@ -145,6 +146,7 @@ void ATM_Enemy::HealthChanged(UTM_HealthComponent* CurrentHealthComponent, AActo
 
 	if (CurrentHealthComponent->IsDead())
 	{
+		MyAIController->DeactivateAIPerception();
 		MyAIController->UnPossess();
 
 		if (IsValid(GameInstanceReference))
@@ -157,6 +159,8 @@ void ATM_Enemy::HealthChanged(UTM_HealthComponent* CurrentHealthComponent, AActo
 			HealerBotReference->DettachEnemy();
 			HealerBotReference = nullptr;
 		}
+
+		SetIsAlert(false);
 
 		HideHealthBar();
 
@@ -184,5 +188,15 @@ void ATM_Enemy::HideHealthBar()
 {
 	bIsShowingHealthBar = false;
 	EnemyHealthBar->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void ATM_Enemy::SetIsAlert(bool bValue)
+{
+	bIsAlert = bValue;
+
+	if (IsValid(GameModeReference))
+	{
+		GameModeReference->CheckAlertMode();
+	}
 }
 

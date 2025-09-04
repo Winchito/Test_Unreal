@@ -19,6 +19,8 @@
 #include "Enemy/TM_BotSpawner.h"
 #include "Items/TM_SpawnKey.h"
 #include "Core/TM_GameInstance.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ATM_Bot::ATM_Bot()
@@ -33,11 +35,16 @@ ATM_Bot::ATM_Bot()
 
 	HealthComponent = CreateAbstractDefaultSubobject<UTM_HealthComponent>(TEXT("HealthComponent"));
 
+	TimerSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("TimerSoundComponent"));
+	TimerSoundComponent->SetupAttachment(RootComponent);
+
 	SelfDestructionDetectorComponent = CreateAbstractDefaultSubobject<USphereComponent>(TEXT("SelfDestructionDetector"));
 	SelfDestructionDetectorComponent->SetupAttachment(RootComponent);
 	SelfDestructionDetectorComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 	SelfDestructionDetectorComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	SelfDestructionDetectorComponent->SetSphereRadius(150.0f);
+
+
 
 
 	MinDistanceToTarget = 100.0f;
@@ -180,6 +187,8 @@ void ATM_Bot::SelfDestruction()
 		MySpawner->NotifyBotDead();
 	}
 
+	PlayExplosionSound();
+
 	Destroy();
 }
 
@@ -201,6 +210,7 @@ void ATM_Bot::StartCountDown(UPrimitiveComponent* OverlappedComponent, AActor* O
 
 void ATM_Bot::SelfDamage()
 {
+	PlayTimerSound();
 	UGameplayStatics::ApplyDamage(this, 20.0f, GetInstigatorController(), nullptr, nullptr);
 }
 
@@ -273,10 +283,10 @@ bool ATM_Bot::TrySpawnLoot()
 			{
 				KeyItem->SetSpawnerRef(MySpawner);
 			}
-			else
-			{
-				Loot = GetWorld()->SpawnActor<ATM_Item>(HealthBoxItemClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParameter);
-			}
+		}
+		else
+		{
+			Loot = GetWorld()->SpawnActor<ATM_Item>(HealthBoxItemClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParameter);
 		}
 	}else
 	{
@@ -284,5 +294,22 @@ bool ATM_Bot::TrySpawnLoot()
 	}
 
 	return true;
+
+}
+
+void ATM_Bot::PlayTimerSound()
+{
+	TimerSoundComponent->Play();
+}
+
+void ATM_Bot::PlayExplosionSound()
+{
+	if (!IsValid(ExplosionSound))
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation());
+
 
 }

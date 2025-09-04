@@ -25,6 +25,8 @@
 #include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Core/TM_GameInstance.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ATM_Character::ATM_Character()
@@ -64,6 +66,12 @@ ATM_Character::ATM_Character()
 	MeleeDetectorComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	HealthComponent = CreateDefaultSubobject<UTM_HealthComponent>(TEXT("HealthComponent"));
+
+	StepSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("StepSoundComponent"));
+	StepSoundComponent->SetupAttachment(RootComponent);
+
+	VoiceSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceSoundComponent"));
+	VoiceSoundComponent->SetupAttachment(RootComponent);
 
 
 	bIsBurstModeActivated = false;
@@ -157,12 +165,25 @@ void ATM_Character::AddControllerPitchInput(float value)
 
 void ATM_Character::OnHealthChange(UTM_HealthComponent* CurrentHealthComponent, AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (HealthComponent->IsDead() && GetCharacterType() == ETM_CharacterType::CharacterType_Player)
+
+	if (!HealthComponent->IsDead())
 	{
-		if (IsValid(GameModeReference))
+		PlayVoiceSound(HurtSound);
+	}
+
+	if (HealthComponent->IsDead())
+	{
+
+		PlayVoiceSound(DeathSound);
+
+		if (GetCharacterType() == ETM_CharacterType::CharacterType_Player)
 		{
-			GameModeReference->GameOver(this);
+			if (IsValid(GameModeReference))
+			{
+				GameModeReference->GameOver(this);
+			}
 		}
+
 	}
 }
 
@@ -212,10 +233,8 @@ void ATM_Character::EndBurningPlayer()
 
 void ATM_Character::StartHealingEffect()
 {
-	UE_LOG(LogTemp, Warning, TEXT("LLego aqui!"));
 	if (HealParticleSystem)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Y entro aqui!"));
 		ParticleSystemComponent = UGameplayStatics::SpawnEmitterAttached(HealParticleSystem, this->GetCapsuleComponent(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::SnapToTarget, true);
 	}
 
@@ -228,6 +247,23 @@ void ATM_Character::EndHealingEffect()
 	{
 		ParticleSystemComponent->DeactivateSystem();
 	}
+}
+
+void ATM_Character::PlayStepSound()
+{
+	StepSoundComponent->Play(0.0f);
+}
+
+void ATM_Character::PlayVoiceSound(USoundCue* VoiceSound)
+{
+	if (!IsValid(VoiceSound))
+	{
+		return;
+	}
+
+
+	VoiceSoundComponent->SetSound(VoiceSound);
+	VoiceSoundComponent->Play();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -588,7 +624,7 @@ void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AA
 			return;
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("Player entered function"));
+		//UE_LOG(LogTemp, Warning, TEXT("Player entered function"));
 
 		ATM_LaunchPadTrigger* Pad = Cast<ATM_LaunchPadTrigger>(OtherActor);
 		if (Pad)
@@ -600,8 +636,8 @@ void ATM_Character::MakeMeleeDamage(UPrimitiveComponent* OverlappedComponent, AA
 		ATM_Character* MeleeTarget = Cast<ATM_Character>(OtherActor);
 		if (IsValid(MeleeTarget))
 		{
-			bool bPlayerAttackingEnemy = GetCharacterType() == ETM_CharacterType::CharacterType_Player && MeleeTarget->GetCharacterType() == ETM_CharacterType::CharacterType_Enemy;
-			bool bEnemyAttackingPlayer = GetCharacterType() == ETM_CharacterType::CharacterType_Enemy && MeleeTarget->GetCharacterType() == ETM_CharacterType::CharacterType_Player;
+			const bool bPlayerAttackingEnemy = GetCharacterType() == ETM_CharacterType::CharacterType_Player && MeleeTarget->GetCharacterType() == ETM_CharacterType::CharacterType_Enemy;
+			const bool bEnemyAttackingPlayer = GetCharacterType() == ETM_CharacterType::CharacterType_Enemy && MeleeTarget->GetCharacterType() == ETM_CharacterType::CharacterType_Player;
 
 			if (bPlayerAttackingEnemy || bEnemyAttackingPlayer)
 			{
@@ -664,7 +700,6 @@ void ATM_Character::StartRangedMelee()
 
 	if (bCanComboRangedMelee)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Entered melee if 1"));
 		if (IsValid(MyAnimInstance) && IsValid(RangedMeleeMontage))
 		{
 			bIsDoingMelee = true;
@@ -726,6 +761,8 @@ void ATM_Character::StartUltimate()
 
 		CurrentUltimateDuration = MaxUltimateDuration;
 		bCanUseUltimate = false;
+
+		PlayVoiceSound(UltimateSound);
 
 		if (bIsSprinting)
 		{
@@ -884,6 +921,7 @@ void ATM_Character::UpdateTeleportUltimateDuration(float Value)
 {
 	CurrentUltimateDuration = FMath::Clamp(CurrentUltimateDuration - Value, 0.0f, MaxUltimateDuration);
 	BP_UpdateUltimateDuration(Value);
+	OnUltimateUpdateDelegate.Broadcast(CurrentUltimateDuration, MaxUltimateDuration);
 
 	if (CurrentUltimateDuration == 0.0f)
 	{

@@ -35,7 +35,7 @@ protected:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pad Force")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pad Force")
 	FVector LaunchForce;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Pad Force")

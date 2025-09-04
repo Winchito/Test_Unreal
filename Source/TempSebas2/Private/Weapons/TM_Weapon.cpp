@@ -3,6 +3,8 @@
 
 #include "TM_Weapon.h"
 #include "GameFramework/Character.h"
+#include "Sound/SoundCue.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ATM_Weapon::ATM_Weapon()
@@ -17,7 +19,7 @@ void ATM_Weapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Damage = 20.0f;
+	Damage = 9.0f;
 }
 
 // Called every frame
@@ -30,6 +32,7 @@ void ATM_Weapon::Tick(float DeltaTime)
 void ATM_Weapon::StartAction()
 {
 	BP_StartAction();
+	PlaySound(ShotSound);
 }
 
 void ATM_Weapon::StopAction()
@@ -42,6 +45,23 @@ void ATM_Weapon::SetCharacterOwner(ACharacter* NewOwner)
 	if (IsValid(NewOwner)) {
 		SetOwner(NewOwner);
 		CurrentOwnerCharacter = NewOwner;
+	}
+}
+
+void ATM_Weapon::PlaySound(USoundCue* SoundCue, bool bIs3D, FVector SoundLocation)
+{
+	if (!IsValid(SoundCue))
+	{
+		return;
+	}
+
+	if (bIs3D)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundCue, SoundLocation);
+	}
+	else
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), SoundCue);
 	}
 }
 

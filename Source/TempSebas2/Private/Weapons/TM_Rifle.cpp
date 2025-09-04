@@ -60,6 +60,14 @@ void ATM_Rifle::StopAction()
 void ATM_Rifle::SetFiringMode(bool bManageWeaponBursting)
 {
 	bIsWeaponBursting = bManageWeaponBursting;
+	if (bIsWeaponBursting)
+	{
+		Damage = 10.0f;
+	}
+	else
+	{
+		Damage = 9.0f;
+	}
 }
 
 
@@ -139,6 +147,7 @@ void ATM_Rifle::StartWeaponBursting()
 	if (BurstCount < MaxBurstToShoot)
 	{
 		FireWeapon();
+		PlaySound(ShotSound);
 		BurstCount++;
 	}
 	else

@@ -50,13 +50,6 @@ void ATM_BotProjectile::BeginPlay()
 	Super::BeginPlay();
 
 	SetLifeSpan(2.0f);
-	
-}
-
-// Called every frame
-void ATM_BotProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (PlayerPawn)
@@ -71,6 +64,14 @@ void ATM_BotProjectile::Tick(float DeltaTime)
 
 		ProjectileMovement->HomingTargetComponent = HomingTargetComponent;
 	}
+	
+}
+
+// Called every frame
+void ATM_BotProjectile::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
 }
 
 

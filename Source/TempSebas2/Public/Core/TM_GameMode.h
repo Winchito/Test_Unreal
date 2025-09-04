@@ -9,9 +9,12 @@
 
 class ATM_Character;
 class ATM_SpectatingCamera;
+class USoundCue;
+class ATM_Enemy;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnKeyAddedSignature, FName, KeyTag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameStateChange);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAlertModeChangeSignature, bool, bIsAlert);
 
 UCLASS()
 class TEMPSEBAS2_API ATM_GameMode : public AGameModeBase
@@ -24,6 +27,9 @@ public:
 
 protected:
 
+	UPROPERTY(BlueprintReadOnly, Category = "Level")
+	bool bIsAlertMode = false;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spectating Camera")
 	float SpectatingBlendTime;
 
@@ -35,6 +41,15 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Spectating Camera")
 	ATM_SpectatingCamera* GameOverCamera;
+
+	UPROPERTY(BlueprintReadOnly,EditDefaultsOnly, Category = "Music")
+	USoundCue* VictoryMusic;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Music")
+	USoundCue* GameOverMusic;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Level")
+	TArray<ATM_Enemy*> LevelEnemies;
 
 	FTimerHandle FTimerHandle_BackToMainMenu;
 
@@ -49,6 +64,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnGameStateChange OnGameOverDelegate;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnAlertModeChangeSignature OnAlertModeChangeDelegate;
+
 protected:
 	
 	virtual void BeginPlay() override;
@@ -56,6 +74,8 @@ protected:
 	void SetUpSpectatingCameras();
 
 	void MoveCameraToSpectatingPoint(ATM_SpectatingCamera* SpectatingCamera, ATM_Character* Character);
+
+	void PlayMusic(USoundCue* MusicCue);
 
 public:
 
@@ -71,9 +91,12 @@ public:
 	UFUNCTION()
 	void BackToMainMenu();
 
+	void CheckAlertMode();
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void BP_Victory(ATM_Character* Character);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void BP_GameOver(ATM_Character* Character);
+
 };

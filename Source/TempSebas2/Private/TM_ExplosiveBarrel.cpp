@@ -59,7 +59,7 @@ void ATM_ExplosiveBarrel::ExplodeBarrel()
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BarrelExplosionEffect, GetActorLocation());
 	}
 
-	DrawDebugSphere(GetWorld(), GetActorLocation(), BarrelExplosionRadius, 20, FColor::Red, true, 5.0f, 0, 2.0f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), BarrelExplosionRadius, 20, FColor::Red, true, 5.0f, 0, 2.0f);
 
 	UGameplayStatics::ApplyRadialDamage(GetWorld(), BarrelExplosionDamage, GetActorLocation(), BarrelExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 

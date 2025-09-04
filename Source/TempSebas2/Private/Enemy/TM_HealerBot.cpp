@@ -183,7 +183,7 @@ void ATM_HealerBot::BotHealerMovement(float DeltaTime)
 		TargetY = OrbitCenter.Y + (OrbitRadius + 150.0f) * FMath::Sin(CurrentAngle);
 		TargetZ = OrbitCenter.Z + OrbitHeight + FMath::Sin(CurrentAngle);
 
-		SetActorLocation(FVector(TargetX, TargetY, TargetZ));
+		SetActorLocation(FVector(TargetX, TargetY, TargetZ), true, nullptr, ETeleportType::None);
 
 		return;
 	}

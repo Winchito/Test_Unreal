@@ -24,8 +24,6 @@ void UTM_HUDUltimate::InitializeWidget()
 void UTM_HUDUltimate::UpdateUltimateValue(float CurrentUltimateXP, float MaxUltimateXP)
 {
 	UltimatePercent = CurrentUltimateXP / MaxUltimateXP;
-	UE_LOG(LogTemp, Warning, TEXT("Entro a la funcion del delegate"));
-	UE_LOG(LogTemp, Warning, TEXT("Valor del UltimatePercent: %f"), UltimatePercent);
 }
 
 void UTM_HUDUltimate::UpdateUltimateStatus(bool bIsAvailable)

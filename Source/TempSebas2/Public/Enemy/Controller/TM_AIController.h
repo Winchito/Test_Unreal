@@ -70,4 +70,6 @@ protected:
 public:
 
 	void SetReceivingDamage(bool bNewState) { bReceivingDamage = bNewState; };
+
+	void DeactivateAIPerception();
 };

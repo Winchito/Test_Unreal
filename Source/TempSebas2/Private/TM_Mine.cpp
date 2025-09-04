@@ -75,7 +75,7 @@ void ATM_Mine::ExplodeMine()
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MineExplosionEffect, GetActorLocation());
 	}
 
-	DrawDebugSphere(GetWorld(), GetActorLocation(), MineExplosionRadius, 20, FColor::Red, true, 5.0f, 0, 2.0f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), MineExplosionRadius, 20, FColor::Red, true, 5.0f, 0, 2.0f);
 
 	UGameplayStatics::ApplyRadialDamage(GetWorld(), MineExplosionDamage, GetActorLocation(), MineExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 

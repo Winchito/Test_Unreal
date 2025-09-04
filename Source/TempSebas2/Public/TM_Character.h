@@ -19,6 +19,8 @@ class ATM_FireBall;
 class ATeleportProjectile;
 class UParticleSystemComponent;
 class UTM_GameInstance;
+class UAudioComponent;
+class USoundCue;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUltimateUpdateSignature, float, CurrentUltimateXP, float, MaxUltimateXP);
 
@@ -56,6 +58,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UParticleSystemComponent* ParticleSystemComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UAudioComponent* StepSoundComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UAudioComponent* VoiceSoundComponent;
 
 protected:
 
@@ -256,6 +264,15 @@ protected:
 
 	FTimerHandle TimerHandle_BurnEnd;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundCue* DeathSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundCue* UltimateSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	USoundCue* HurtSound;
+
 public:
 
 	UPROPERTY(BlueprintAssignable)
@@ -417,6 +434,10 @@ public:
 	ETM_CharacterType GetCharacterType() { return CharacterType; };
 
 	UTM_HealthComponent* GetHealthComponent() { return HealthComponent; };
+
+	void PlayStepSound();
+
+	void PlayVoiceSound(USoundCue* VoiceSound);
 
 protected:
 
